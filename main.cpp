@@ -77,6 +77,7 @@ IDxcBlob* CompileShader(
 	IDxcCompiler3* dxcCompiler,
 	IDxcIncludeHandler* includeHandler)
 {
+	//1.HLSLファイルを読み込む
 	Log(ConvertString(std::format(L"Begin CompileShader, path:{},profile:{}\n", filePath, profile)));
 
 	IDxcBlobEncoding* shaderSource = nullptr;
@@ -86,6 +87,48 @@ IDxcBlob* CompileShader(
 
 	DxcBuffer shaderSourceBeffer;
 
+	shaderSourceBeffer.Ptr = shaderSource->GetBufferPointer();
+	shaderSourceBeffer.Size = shaderSource->GetBufferSize();
+	shaderSourceBeffer.Encoding = DXC_CP_UTF8;
+
+	//2.コンパイルする
+	LPCWSTR arguments[] = {
+
+		filePath.c_str(),
+		L"-E",L"main",
+		L"-T",profile,
+		L"-Zi",L"-Qembed_debug",
+		L"-Od",
+		L"-Zpr",
+	};
+
+	IDxcResult* shaderResult = nullptr;
+	hr = dxcCompiler->Compile(&shaderSourceBeffer, arguments, _countof(arguments), includeHandler, IID_PPV_ARGS(&shaderResult));
+
+	assert(SUCCEEDED(hr));
+
+	//3.警告・エラーが出てないか確認する
+	IDxcBlobUtf8* shaderError = nullptr;
+
+	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
+	if (shaderError != nullptr && shaderError->GetStringLength() != 0)
+	{
+		Log(shaderError->GetStringPointer());
+
+		assert(false);
+	}
+
+	//4.コンパイル結果を受け取って返す
+	IDxcBlob* shaderBlob = nullptr;
+	hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+	assert(SUCCEEDED(hr));
+
+	Log(ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
+
+	shaderSource->Release();
+	shaderResult->Release();
+
+	return shaderBlob;
 }
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -343,6 +386,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	assert(fenceEvent != nullptr);
 
+#pragma region DXCの初期化
+
 	//DXCの初期化
 	IDxcUtils* dxcUtils = nullptr;
 	IDxcCompiler3* dxcCompiler = nullptr;
@@ -357,10 +402,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	IDxcIncludeHandler* includeHandler = nullptr;
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
 	assert(SUCCEEDED(hr));
+#pragma endregion
 
 
+	//D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
+	//descriptionRootSignature.Flags =
+	//	D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	//
+	//ID3DBlob* signatureBlob = nullptr;
+	//ID3D10Blob* errorBlob = nullptr;
+	//hr = D3D12SerializeRootSignature(&descriptionRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
+
+	//if (FAILED(hr));
+	//{
+
+	//}
 
 	MSG msg{};
+
 
 	//Windowsの罰ボタンが押されるまでループ
 	while (msg.message != WM_QUIT)
