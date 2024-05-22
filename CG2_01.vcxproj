@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="affine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Object3d.PS.hlsl">
@@ -29,6 +30,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Vector4.h" />
+    <ClInclude Include="Matrix4x4.h" />
+    <ClInclude Include="Vector3.h" />
+    <ClInclude Include="affine.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

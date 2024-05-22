@@ -8,6 +8,9 @@
 #include <dxgidebug.h>
 #include <dxcapi.h>
 #include "Vector4.h"
+#include "Vector3.h"
+#include "Matrix4x4.h"
+#include "affine.h"
 
 
 #pragma comment(lib, "dxcompiler.lib")
@@ -68,6 +71,8 @@ void Log(const std::string& message) {
 
 #pragma endregion
 
+
+#pragma region ツール
 
 IDxcBlob* CompileShader(
 
@@ -133,6 +138,8 @@ IDxcBlob* CompileShader(
 	return shaderBlob;
 }
 
+#pragma endregion
+
 //リソースの関数化
 ID3D12Resource* CreateBufferResourse(ID3D12Device* device, size_t sizeInBytes)
 {
@@ -162,6 +169,22 @@ ID3D12Resource* CreateBufferResourse(ID3D12Device* device, size_t sizeInBytes)
 	return vertexResourse;
 }
 
+// 単位行列の作成
+Matrix4x4 MakeIdentity4x4() {
+	Matrix4x4 result = {};
+	for (int i = 0; i < 4; ++i) {
+		result.m[i][i] = 1;
+	}
+	return result;
+}
+
+struct Transform
+{
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+
+};
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -441,10 +464,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-	D3D12_ROOT_PARAMETER rootParameters[1] = {};
+	D3D12_ROOT_PARAMETER rootParameters[2] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[0].Descriptor.ShaderRegister = 0;
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameters[1].Descriptor.ShaderRegister = 0;
 	descriptionRootSignature.pParameters = rootParameters;
 	descriptionRootSignature.NumParameters = _countof(rootParameters);
 	
@@ -511,6 +537,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ID3D12Resource* vertexResourse = CreateBufferResourse(device, sizeof(Vector4) * 3);
 
+
+	ID3D12Resource* wvpResourse = CreateBufferResourse(device, sizeof(Matrix4x4));
+
+	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+
+
+	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+
+	Matrix4x4* wvpData = nullptr;
+	wvpResourse->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+	*wvpData = MakeIdentity4x4();
+
 	//頂点バッファービューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferview{};
 
@@ -529,7 +567,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12Resource* materialResorse = CreateBufferResourse(device, sizeof(Vector4));
 	Vector4* materialData = nullptr;
 	materialResorse->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	
+	//これで色を変えられる
+	*materialData = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 	//ここまで
 
 	D3D12_VIEWPORT viewport{};
@@ -600,7 +640,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 			//ここから00_02
-			commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
+			//commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
+
+			transform.rotate.y += 0.03f;
+			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			*wvpData = worldMatrix;
+
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResourse->GetGPUVirtualAddress());
 			//ここから00_02
 
 			commandList->DrawInstanced(3, 1, 0, 0);
@@ -657,7 +703,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	device->Release();
 	useadapter->Release();
 	dxgiFactory->Release();
-
+	wvpResourse->Release();
 
 	vertexResourse->Release();
 	graphicsPipelineState->Release();
