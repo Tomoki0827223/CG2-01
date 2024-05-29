@@ -540,29 +540,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ID3D12Resource* wvpResourse = CreateBufferResourse(device, sizeof(Matrix4x4));
 
-	//Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-
-
-	//Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-
 	Matrix4x4* wvpData = nullptr;
 	wvpResourse->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
 	*wvpData = MakeIdentity4x4();
 
 	// カメラのTransform設定
-	Transform cameraTransform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
+	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	//Transform cameraTransform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
 	// 透視投影行列の設定
-	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientwidth) / float(kClientHeight), 0.1f, 100.0f);
+	//Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientwidth) / float(kClientHeight), 0.1f, 100.0f);
 
 	// 三角形のTransform設定
 	Transform triangleTransform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
 	// WVPMatrixの計算
 	Matrix4x4 worldMatrix = MakeAffineMatrix(triangleTransform.scale, triangleTransform.rotate, triangleTransform.translate);
-	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-	Matrix4x4 worldViewProjectionMatrix = MatrixMultipry(worldMatrix, MatrixMultipry(viewMatrix, projectionMatrix));
+	//Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+	//Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+	//Matrix4x4 worldViewProjectionMatrix = MatrixMultipry(worldMatrix, MatrixMultipry(viewMatrix, projectionMatrix));
 
 
 	//頂点バッファービューを作成する
@@ -658,8 +654,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//ここから00_02
 			//commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
 
-			cameraTransform.rotate.y += 0.03f;
-			Matrix4x4 worldMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			transform.rotate.y += 0.03f;
+			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			*wvpData = worldMatrix;
 
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResourse->GetGPUVirtualAddress());
