@@ -577,6 +577,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	scissorRect.top = 0;
 	scissorRect.bottom = kClientHeight;
 
+	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	//Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+
 	MSG msg{};
 
 
@@ -595,6 +598,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//これから書き込むバックアップのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
+			transform.rotate.y += 0.03f;
+			Matrix4x4 worldmatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			*wvpData = worldmatrix;
 
 			//TransitionBarrier
 			D3D12_RESOURCE_BARRIER barrier{};
@@ -686,7 +692,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	device->Release();
 	useadapter->Release();
 	dxgiFactory->Release();
-
+	wvpResourse->Release();
 
 	vertexResourse->Release();
 	graphicsPipelineState->Release();
