@@ -585,7 +585,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialResorse->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	
 	//これで色を変えられる
-	*materialData = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+	*materialData = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
 	//ここまで
 
 	D3D12_VIEWPORT viewport{};
