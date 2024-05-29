@@ -535,7 +535,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12Resource* vertexResourse = CreateBufferResourse(device, sizeof(Vector4) * 3);
 
 	ID3D12Resource* wvpResourse = CreateBufferResourse(device, sizeof(Matrix4x4));
-
+	//ここから02_01確認課題
+	ID3D12Resource* materialResorse = CreateBufferResourse(device, sizeof(Vector4));
+	Vector4* materialData = nullptr;
+	materialResorse->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	//ここまで
 	Matrix4x4* wvpData = nullptr;
 	wvpResourse->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
 	*wvpData = MakeIdentity4x4();
@@ -554,12 +559,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexData[1] = { 0.0f,0.5f,0.0f,1.0f };
 	vertexData[2] = { 0.5f,-0.5f,0.0f,1.0f };
 
-	//ここから02_01確認課題
-	ID3D12Resource* materialResorse = CreateBufferResourse(device, sizeof(Vector4));
-	Vector4* materialData = nullptr;
-	materialResorse->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-	*materialData = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
-	//ここまで
+
 
 	D3D12_VIEWPORT viewport{};
 
@@ -598,9 +598,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//これから書き込むバックアップのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
-			transform.rotate.y += 0.03f;
-			Matrix4x4 worldmatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-			*wvpData = worldmatrix;
 
 			//TransitionBarrier
 			D3D12_RESOURCE_BARRIER barrier{};
@@ -635,7 +632,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 			//ここから00_02
-			commandList->SetGraphicsRootConstantBufferView(1, materialResorse->GetGPUVirtualAddress());
+			//commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
+
+			transform.rotate.y += 0.001f;
+			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			*wvpData = worldMatrix;
+
+			commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResourse->GetGPUVirtualAddress());
 			//ここから00_02
 
 			commandList->DrawInstanced(3, 1, 0, 0);
@@ -662,7 +666,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			commandQueue->Signal(fence, fenceValue);
 
-			if (fence->GetCompletedValue()<fenceValue)
+			if (fence->GetCompletedValue() < fenceValue)
 			{
 				fence->SetEventOnCompletion(fenceValue, fenceEvent);
 
