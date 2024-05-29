@@ -7,6 +7,7 @@
 #include <cassert>
 #include <dxgidebug.h>
 #include <dxcapi.h>
+#include <d3d11.h>
 #include "Vector4.h"
 #include "Vector3.h"
 #include "Matrix4x4.h"
@@ -227,6 +228,37 @@ void RenderImGui() {
 	draw_list->AddTriangleFilled(p0, p1, p2, ImGui::ColorConvertFloat4ToU32(triangleColor));
 
 	ImGui::End();
+}
+
+struct Particle {
+	ImVec2 position;
+	ImVec2 velocity;
+	ImVec4 color;
+};
+
+Particle particles[1000];
+
+void UpdateParticles(float deltaTime) {
+	for (int i = 0; i < 1000; ++i) {
+		Particle& p = particles[i];
+		// Update position based on velocity
+		p.position.x += p.velocity.x * deltaTime;
+		p.position.y += p.velocity.y * deltaTime;
+		// Apply gravity or other forces here if needed
+	}
+}
+
+void DrawParticles() {
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	for (int i = 0; i < 1000; ++i) {
+		Particle& p = particles[i];
+		drawList->AddTriangleFilled(
+			p.position,
+			ImVec2(p.position.x + 5, p.position.y),
+			ImVec2(p.position.x, p.position.y + 5),
+			IM_COL32(int(p.color.x * 255), int(p.color.y * 255), int(p.color.z * 255), int(p.color.w * 255))
+		);
+	}
 }
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -508,7 +540,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma endregion
 
 
-
+#pragma region iroiro
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
@@ -665,6 +697,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ImGui::StyleColorsDark();
 
+#pragma endregion
+
 	//Windowsの罰ボタンが押されるまでループ
 	while (msg.message != WM_QUIT)
 	{
@@ -680,6 +714,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
+
+			UpdateParticles(100);
 
 			//これから書き込むバックアップのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -705,7 +741,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::PopStyleColor(); // 色をポップして元に戻す
 
 			//ImGui::End();
+
 			RenderImGui();
+
+			ImGui::Begin("Particle System");
+			DrawParticles();
+			ImGui::End();
 
 			ImGui::ShowDemoWindow();
 			ImGui::Render();
