@@ -539,7 +539,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12Resource* materialResorse = CreateBufferResourse(device, sizeof(Vector4));
 	Vector4* materialData = nullptr;
 	materialResorse->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+
+
+	//こここで色かえられるよ
+	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//こここで色かえられるよ
+
+
 	//ここまで
 	Matrix4x4* wvpData = nullptr;
 	wvpResourse->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
@@ -644,7 +650,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//ここから00_02
 			//commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
 
-			transform.rotate.y += 0.006f;
+			transform.rotate.y += 0.009f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			*wvpData = worldMatrix;
 
