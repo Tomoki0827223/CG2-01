@@ -634,7 +634,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//ここから00_02
 			//commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
 
-			transform.rotate.y += 1.0f;
+			transform.rotate.y += 0.03f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			*wvpData = worldMatrix;
 
