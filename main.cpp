@@ -165,6 +165,22 @@ ID3D12Resource* CreateBufferResourse(ID3D12Device* device, size_t sizeInBytes)
 	return vertexResourse;
 }
 
+// 単位行列の作成
+Matrix4x4 MakeIdentity4x4() {
+	Matrix4x4 result = {};
+	for (int i = 0; i < 4; ++i) {
+		result.m[i][i] = 1;
+	}
+	return result;
+}
+
+struct Transform
+{
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+
+};
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -542,7 +558,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12Resource* materialResorse = CreateBufferResourse(device, sizeof(Vector4));
 	Vector4* materialData = nullptr;
 	materialResorse->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-	*materialData = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+	*materialData = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
 	//ここまで
 
 	D3D12_VIEWPORT viewport{};
@@ -613,7 +629,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 			//ここから00_02
-			commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(1, materialResorse->GetGPUVirtualAddress());
 			//ここから00_02
 
 			commandList->DrawInstanced(3, 1, 0, 0);
