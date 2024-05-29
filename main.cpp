@@ -7,7 +7,10 @@
 #include <cassert>
 #include <dxgidebug.h>
 #include <dxcapi.h>
+#include "Matrix4x4.h"
+#include "Vector3.h"
 #include "Vector4.h"
+#include "affine.h"
 
 
 #pragma comment(lib, "dxcompiler.lib")
@@ -515,11 +518,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ID3D12Resource* vertexResourse = CreateBufferResourse(device, sizeof(Vector4) * 3);
 
-	//ID3D12Resource* wvpResourse = CreateBufferResourse(device, sizeof(Matrix4x4));
+	ID3D12Resource* wvpResourse = CreateBufferResourse(device, sizeof(Matrix4x4));
 
-	//Matrix4x4* wvpData = nullptr;
-	//wvpResourse->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
-	//*wvpData = MakeIdentity4x4();
+	Matrix4x4* wvpData = nullptr;
+	wvpResourse->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+	*wvpData = MakeIdentity4x4();
 
 	//頂点バッファービューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferview{};
