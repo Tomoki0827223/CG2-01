@@ -211,55 +211,55 @@ struct Transform
 
 };
 
-void RenderImGui() {
-	ImGui::Begin("Triangle Color Example");
-
-	static ImVec4 triangleColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); // 初期色は赤色
-
-	// 色を選択できる ImGui のウィジェットを表示
-	ImGui::ColorEdit4("Triangle Color", (float*)&triangleColor);
-
-	ImDrawList* draw_list = ImGui::GetWindowDrawList();
-	ImVec2 p0 = ImVec2(100.0f, 100.0f);
-	ImVec2 p1 = ImVec2(200.0f, 100.0f);
-	ImVec2 p2 = ImVec2(150.0f, 200.0f);
-
-	// 選択された色で三角形を描画
-	draw_list->AddTriangleFilled(p0, p1, p2, ImGui::ColorConvertFloat4ToU32(triangleColor));
-
-	ImGui::End();
-}
-
-struct Particle {
-	ImVec2 position;
-	ImVec2 velocity;
-	ImVec4 color;
-};
-
-Particle particles[1000];
-
-void UpdateParticles(float deltaTime) {
-	for (int i = 0; i < 1000; ++i) {
-		Particle& p = particles[i];
-		// Update position based on velocity
-		p.position.x += p.velocity.x * deltaTime;
-		p.position.y += p.velocity.y * deltaTime;
-		// Apply gravity or other forces here if needed
-	}
-}
-
-void DrawParticles() {
-	ImDrawList* drawList = ImGui::GetWindowDrawList();
-	for (int i = 0; i < 1000; ++i) {
-		Particle& p = particles[i];
-		drawList->AddTriangleFilled(
-			p.position,
-			ImVec2(p.position.x + 5, p.position.y),
-			ImVec2(p.position.x, p.position.y + 5),
-			IM_COL32(int(p.color.x * 255), int(p.color.y * 255), int(p.color.z * 255), int(p.color.w * 255))
-		);
-	}
-}
+//void RenderImGui() {
+//	ImGui::Begin("Triangle Color Example");
+//
+//	static ImVec4 triangleColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); // 初期色は赤色
+//
+//	// 色を選択できる ImGui のウィジェットを表示
+//	ImGui::ColorEdit4("Triangle Color", (float*)&triangleColor);
+//
+//	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+//	ImVec2 p0 = ImVec2(100.0f, 100.0f);
+//	ImVec2 p1 = ImVec2(200.0f, 100.0f);
+//	ImVec2 p2 = ImVec2(150.0f, 200.0f);
+//
+//	// 選択された色で三角形を描画
+//	draw_list->AddTriangleFilled(p0, p1, p2, ImGui::ColorConvertFloat4ToU32(triangleColor));
+//
+//	ImGui::End();
+//}
+//
+//struct Particle {
+//	ImVec2 position;
+//	ImVec2 velocity;
+//	ImVec4 color;
+//};
+//
+//Particle particles[1000];
+//
+//void UpdateParticles(float deltaTime) {
+//	for (int i = 0; i < 1000; ++i) {
+//		Particle& p = particles[i];
+//		// Update position based on velocity
+//		p.position.x += p.velocity.x * deltaTime;
+//		p.position.y += p.velocity.y * deltaTime;
+//		// Apply gravity or other forces here if needed
+//	}
+//}
+//
+//void DrawParticles() {
+//	ImDrawList* drawList = ImGui::GetWindowDrawList();
+//	for (int i = 0; i < 1000; ++i) {
+//		Particle& p = particles[i];
+//		drawList->AddTriangleFilled(
+//			p.position,
+//			ImVec2(p.position.x + 5, p.position.y),
+//			ImVec2(p.position.x, p.position.y + 5),
+//			IM_COL32(int(p.color.x * 255), int(p.color.y * 255), int(p.color.z * 255), int(p.color.w * 255))
+//		);
+//	}
+//}
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -620,7 +620,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ID3D12Resource* wvpResourse = CreateBufferResourse(device, sizeof(Matrix4x4));
 
-	//Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 
 	//Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
@@ -632,17 +632,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// カメラのTransform設定
 	Transform cameraTransform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
-	// 透視投影行列の設定
-	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientwidth) / float(kClientHeight), 0.1f, 100.0f);
-
 	// 三角形のTransform設定
 	Transform triangleTransform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
-
-	// WVPMatrixの計算
-	Matrix4x4 worldMatrix = MakeAffineMatrix(triangleTransform.scale, triangleTransform.rotate, triangleTransform.translate);
-	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-	Matrix4x4 worldViewProjectionMatrix = MatrixMultipry(worldMatrix, MatrixMultipry(viewMatrix, projectionMatrix));
 
 
 	//頂点バッファービューを作成する
@@ -665,7 +656,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialResorse->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	
 	//これで色を変えられる
-	*materialData = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+	*materialData = Vector4(0.0f, 0.0f, 0.0f, 0.0f);
 	//ここまで
 
 	D3D12_VIEWPORT viewport{};
@@ -714,16 +705,49 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
+			ImGui::Begin("SetColor");
+			ImGui::ColorEdit4("*materialData", &materialData->x);
 
-			UpdateParticles(100);
+			//UpdateParticles(100);
 
+			cameraTransform.rotate.y += 0.03f;
+			Matrix4x4 worldMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			*wvpData = worldMatrix;
+
+			// WVPMatrixの計算
+			//Matrix4x4 worldMatrix = MakeAffineMatrix(triangleTransform.scale, triangleTransform.rotate, triangleTransform.translate);
+			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+			// 透視投影行列の設定
+			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientwidth) / float(kClientHeight), 0.1f, 100.0f);
+
+			Matrix4x4 worldViewProjectionMatrix = MatrixMultipry(worldMatrix, MatrixMultipry(viewMatrix, projectionMatrix));
+			//*wvpData = worldViewProjectionMatrix;
+
+			//ここから00_02
+			//commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
+			
 			//これから書き込むバックアップのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
-
-
 			//TransitionBarrier
 			D3D12_RESOURCE_BARRIER barrier{};
-			//今回のバリアはTransition
+			//今回のバリ			//ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤のテキスト色をプッシュ
+			//ImGui::Text("Red Text");
+			//ImGui::PopStyleColor(); // 色をポップして元に戻す
+
+			////ImGui::End();
+
+			//RenderImGui();
+
+			//ImGui::Begin("Particle System");
+			//DrawParticles();
+			ImGui::End();
+
+			ImGui::ShowDemoWindow();
+
+			ImGui::Render();
+			
+			// アはTransition
 			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 			//Noneにしておく
 			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -735,22 +759,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			//TransitionBarrierを張る
 			commandList->ResourceBarrier(1, &barrier);
-
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤のテキスト色をプッシュ
-			ImGui::Text("Red Text");
-			ImGui::PopStyleColor(); // 色をポップして元に戻す
-
-			//ImGui::End();
-
-			RenderImGui();
-
-			ImGui::Begin("Particle System");
-			DrawParticles();
-			ImGui::End();
-
-			ImGui::ShowDemoWindow();
-			ImGui::Render();
-
 			//描画先のRTVを設定する
 			commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
 			//指定した色で画面全体をクリアする
@@ -772,14 +780,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 
-			//ここから00_02
-			//commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
 
-			cameraTransform.rotate.y += 0.03f;
-			Matrix4x4 worldMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-			*wvpData = worldMatrix;
 
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResourse->GetGPUVirtualAddress());
+			//commandList->SetGraphicsRootConstantBufferView(1, materialResorse->GetGPUVirtualAddress());
 			//ここから00_02
 
 			commandList->DrawInstanced(3, 1, 0, 0);
@@ -825,6 +829,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 	}
 
+	CoUninitialize();
+
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
@@ -833,6 +839,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	CloseHandle(fenceEvent);
 	fence->Release();
 	rtvDescriptorHeap->Release();
+	srvDescriptorHeap->Release();
+
 	swapChainResource[0]->Release();
 	swapChainResource[1]->Release();
 	swapChain->Release();
