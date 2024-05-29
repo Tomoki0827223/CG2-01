@@ -22,7 +22,62 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 
+//
+//#pragma region 遊んでいます
+//
+//void RenderImGui() {
+//	ImGui::Begin("Triangle Color Example");
+//
+//	static ImVec4 triangleColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); // 初期色は赤色
+//
+//	// 色を選択できる ImGui のウィジェットを表示
+//	ImGui::ColorEdit4("Triangle Color", (float*)&triangleColor);
+//
+//	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+//	ImVec2 p0 = ImVec2(100.0f, 100.0f);
+//	ImVec2 p1 = ImVec2(200.0f, 100.0f);
+//	ImVec2 p2 = ImVec2(150.0f, 200.0f);
+//
+//	// 選択された色で三角形を描画
+//	draw_list->AddTriangleFilled(p0, p1, p2, ImGui::ColorConvertFloat4ToU32(triangleColor));
+//
+//	ImGui::End();
+//}
+//
+//struct Particle {
+//	ImVec2 position;
+//	ImVec2 velocity;
+//	ImVec4 color;
+//};
+//
+//Particle particles[1000];
+//
+//void UpdateParticles(float deltaTime) {
+//	for (int i = 0; i < 1000; ++i) {
+//		Particle& p = particles[i];
+//		// Update position based on velocity
+//		p.position.x += p.velocity.x * deltaTime;
+//		p.position.y += p.velocity.y * deltaTime;
+//		// Apply gravity or other forces here if needed
+//	}
+//}
+//
+//void DrawParticles() {
+//	ImDrawList* drawList = ImGui::GetWindowDrawList();
+//	for (int i = 0; i < 1000; ++i) {
+//		Particle& p = particles[i];
+//		drawList->AddTriangleFilled(
+//			p.position,
+//			ImVec2(p.position.x + 5, p.position.y),
+//			ImVec2(p.position.x, p.position.y + 5),
+//			IM_COL32(int(p.color.x * 255), int(p.color.y * 255), int(p.color.z * 255), int(p.color.w * 255))
+//		);
+//	}
+//}
+//#pragma endregion
 
+
+#pragma region DescriptorHeap
 ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
 
 	//ディスクリプタビュー
@@ -38,7 +93,7 @@ ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTO
 
 	return DescriptorHeap;
 }
-
+#pragma endregion
 
 #pragma region ツール
 //ウインドウプローシャ
@@ -164,6 +219,7 @@ IDxcBlob* CompileShader(
 }
 #pragma endregion
 
+#pragma region リソースの関数か
 //リソースの関数化
 ID3D12Resource* CreateBufferResourse(ID3D12Device* device, size_t sizeInBytes)
 {
@@ -192,7 +248,9 @@ ID3D12Resource* CreateBufferResourse(ID3D12Device* device, size_t sizeInBytes)
 
 	return vertexResourse;
 }
+#pragma endregion
 
+#pragma region 単位行列とTransform
 // 単位行列の作成
 Matrix4x4 MakeIdentity4x4() {
 	Matrix4x4 result = {};
@@ -209,6 +267,7 @@ struct Transform
 	Vector3 translate;
 
 };
+#pragma endregion
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -489,7 +548,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma endregion
 
 
-
+#pragma region  descriptionRootSignature
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
@@ -517,7 +576,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12RootSignature* rootSignature = nullptr;
 	hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
+#pragma endregion
 
+
+#pragma region inputElementDescとgraphicsPinpelineStateDesc
 
 	D3D12_INPUT_ELEMENT_DESC inputElementDesc[1] = {};
 	inputElementDesc[0].SemanticName = "POSITION";
@@ -564,6 +626,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12PipelineState* graphicsPipelineState = nullptr;
 	hr = device->CreateGraphicsPipelineState(&graphicsPinpelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
+
+#pragma endregion
+
 
 	ID3D12Resource* vertexResourse = CreateBufferResourse(device, sizeof(Vector4) * 3);
 
@@ -660,6 +725,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::Begin("SetColor");
 			ImGui::ColorEdit4("*materialData", &materialData->x);
 
+			//ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤のテキスト色をプッシュ
+			//ImGui::Text("Red Text");
+
+			//// 色をポップして元に戻す
+			//ImGui::PopStyleColor();
+
+			//ImGui::Begin("Particle System");
+			//DrawParticles();
+
 			//これから書き込むバックアップのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
@@ -701,6 +775,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 			ImGui::End();
+			//RenderImGui();
 			ImGui::ShowDemoWindow();
 			ImGui::Render();
 
