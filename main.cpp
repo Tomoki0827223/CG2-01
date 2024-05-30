@@ -22,59 +22,59 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 
-//
-//#pragma region 遊んでいます
-//
-//void RenderImGui() {
-//	ImGui::Begin("Triangle Color Example");
-//
-//	static ImVec4 triangleColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); // 初期色は赤色
-//
-//	// 色を選択できる ImGui のウィジェットを表示
-//	ImGui::ColorEdit4("Triangle Color", (float*)&triangleColor);
-//
-//	ImDrawList* draw_list = ImGui::GetWindowDrawList();
-//	ImVec2 p0 = ImVec2(100.0f, 100.0f);
-//	ImVec2 p1 = ImVec2(200.0f, 100.0f);
-//	ImVec2 p2 = ImVec2(150.0f, 200.0f);
-//
-//	// 選択された色で三角形を描画
-//	draw_list->AddTriangleFilled(p0, p1, p2, ImGui::ColorConvertFloat4ToU32(triangleColor));
-//
-//	ImGui::End();
-//}
-//
-//struct Particle {
-//	ImVec2 position;
-//	ImVec2 velocity;
-//	ImVec4 color;
-//};
-//
-//Particle particles[1000];
-//
-//void UpdateParticles(float deltaTime) {
-//	for (int i = 0; i < 1000; ++i) {
-//		Particle& p = particles[i];
-//		// Update position based on velocity
-//		p.position.x += p.velocity.x * deltaTime;
-//		p.position.y += p.velocity.y * deltaTime;
-//		// Apply gravity or other forces here if needed
-//	}
-//}
-//
-//void DrawParticles() {
-//	ImDrawList* drawList = ImGui::GetWindowDrawList();
-//	for (int i = 0; i < 1000; ++i) {
-//		Particle& p = particles[i];
-//		drawList->AddTriangleFilled(
-//			p.position,
-//			ImVec2(p.position.x + 5, p.position.y),
-//			ImVec2(p.position.x, p.position.y + 5),
-//			IM_COL32(int(p.color.x * 255), int(p.color.y * 255), int(p.color.z * 255), int(p.color.w * 255))
-//		);
-//	}
-//}
-//#pragma endregion
+
+#pragma region 遊んでいます
+
+void RenderImGui() {
+	ImGui::Begin("Triangle Color Example");
+
+	static ImVec4 triangleColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); // 初期色は赤色
+
+	// 色を選択できる ImGui のウィジェットを表示
+	ImGui::ColorEdit4("Triangle Color", (float*)&triangleColor);
+
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+	ImVec2 p0 = ImVec2(100.0f, 100.0f);
+	ImVec2 p1 = ImVec2(200.0f, 100.0f);
+	ImVec2 p2 = ImVec2(150.0f, 200.0f);
+
+	// 選択された色で三角形を描画
+	draw_list->AddTriangleFilled(p0, p1, p2, ImGui::ColorConvertFloat4ToU32(triangleColor));
+
+	ImGui::End();
+}
+
+struct Particle {
+	ImVec2 position;
+	ImVec2 velocity;
+	ImVec4 color;
+};
+
+Particle particles[1000];
+
+void UpdateParticles(float deltaTime) {
+	for (int i = 0; i < 1000; ++i) {
+		Particle& p = particles[i];
+		// Update position based on velocity
+		p.position.x += p.velocity.x * deltaTime;
+		p.position.y += p.velocity.y * deltaTime;
+		// Apply gravity or other forces here if needed
+	}
+}
+
+void DrawParticles() {
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	for (int i = 0; i < 1000; ++i) {
+		Particle& p = particles[i];
+		drawList->AddTriangleFilled(
+			p.position,
+			ImVec2(p.position.x + 5, p.position.y),
+			ImVec2(p.position.x, p.position.y + 5),
+			IM_COL32(int(p.color.x * 255), int(p.color.y * 255), int(p.color.z * 255), int(p.color.w * 255))
+		);
+	}
+}
+#pragma endregion
 
 
 #pragma region DescriptorHeap
@@ -725,11 +725,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrix = MatrixMultipry(worldMatrix, MatrixMultipry(viewMatrix, projectionMatrix));
 			*wvpData = worldViewProjectionMatrix;
 
-			//ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤のテキスト色をプッシュ
-			//ImGui::Text("Red Text");
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤のテキスト色をプッシュ
+			ImGui::Text("Red Text");
 
-			//// 色をポップして元に戻す
-			//ImGui::PopStyleColor();
+			// 色をポップして元に戻す
+			ImGui::PopStyleColor();
 
 			//ImGui::Begin("Particle System");
 			//DrawParticles();
