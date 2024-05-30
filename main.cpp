@@ -712,7 +712,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			cameraTransform.rotate.y += 0.03f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-			*wvpData = worldMatrix;
 
 			// WVPMatrixの計算
 			//Matrix4x4 worldMatrix = MakeAffineMatrix(triangleTransform.scale, triangleTransform.rotate, triangleTransform.translate);
