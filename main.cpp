@@ -7,6 +7,7 @@
 #include <cassert>
 #include <dxgidebug.h>
 #include <dxcapi.h>
+#include <d3d11.h>
 #include "Vector4.h"
 #include "Vector3.h"
 #include "Matrix4x4.h"
@@ -16,11 +17,85 @@
 #include "externals/imgui/imgui_impl_win32.h"
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wparm, LPARAM lparam);
 
-
 #pragma comment(lib, "dxcompiler.lib")
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
+
+//
+//#pragma region 遊んでいます
+//
+//void RenderImGui() {
+//	ImGui::Begin("Triangle Color Example");
+//
+//	static ImVec4 triangleColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); // 初期色は赤色
+//
+//	// 色を選択できる ImGui のウィジェットを表示
+//	ImGui::ColorEdit4("Triangle Color", (float*)&triangleColor);
+//
+//	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+//	ImVec2 p0 = ImVec2(100.0f, 100.0f);
+//	ImVec2 p1 = ImVec2(200.0f, 100.0f);
+//	ImVec2 p2 = ImVec2(150.0f, 200.0f);
+//
+//	// 選択された色で三角形を描画
+//	draw_list->AddTriangleFilled(p0, p1, p2, ImGui::ColorConvertFloat4ToU32(triangleColor));
+//
+//	ImGui::End();
+//}
+//
+//struct Particle {
+//	ImVec2 position;
+//	ImVec2 velocity;
+//	ImVec4 color;
+//};
+//
+//Particle particles[1000];
+//
+//void UpdateParticles(float deltaTime) {
+//	for (int i = 0; i < 1000; ++i) {
+//		Particle& p = particles[i];
+//		// Update position based on velocity
+//		p.position.x += p.velocity.x * deltaTime;
+//		p.position.y += p.velocity.y * deltaTime;
+//		// Apply gravity or other forces here if needed
+//	}
+//}
+//
+//void DrawParticles() {
+//	ImDrawList* drawList = ImGui::GetWindowDrawList();
+//	for (int i = 0; i < 1000; ++i) {
+//		Particle& p = particles[i];
+//		drawList->AddTriangleFilled(
+//			p.position,
+//			ImVec2(p.position.x + 5, p.position.y),
+//			ImVec2(p.position.x, p.position.y + 5),
+//			IM_COL32(int(p.color.x * 255), int(p.color.y * 255), int(p.color.z * 255), int(p.color.w * 255))
+//		);
+//	}
+//}
+//
+//
+//#pragma endregion
+
+
+#pragma region DescriptorHeap
+ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
+
+	//ディスクリプタビュー
+	ID3D12DescriptorHeap* DescriptorHeap = nullptr;
+	D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc{};
+
+	DescriptorHeapDesc.Type = heapType;
+	DescriptorHeapDesc.NumDescriptors = numDescriptors;
+	DescriptorHeapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	HRESULT hr = device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&DescriptorHeap));
+	//ディスクリプタヒープが作れなかったので起動できない
+	assert(SUCCEEDED(hr));
+
+	return DescriptorHeap;
+}
+#pragma endregion
 
 #pragma region ツール
 //ウインドウプローシャ
@@ -37,7 +112,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	case WM_DESTROY:
 
 		PostQuitMessage(0);
-		
+
 		return 0;
 	}
 
@@ -80,9 +155,7 @@ void Log(const std::string& message) {
 
 #pragma endregion
 
-
-#pragma region ツール
-
+#pragma region コンパイルシェーダー
 IDxcBlob* CompileShader(
 
 	const std::wstring& filePath,
@@ -146,9 +219,9 @@ IDxcBlob* CompileShader(
 
 	return shaderBlob;
 }
-
 #pragma endregion
 
+#pragma region リソースの関数か
 //リソースの関数化
 ID3D12Resource* CreateBufferResourse(ID3D12Device* device, size_t sizeInBytes)
 {
@@ -177,7 +250,9 @@ ID3D12Resource* CreateBufferResourse(ID3D12Device* device, size_t sizeInBytes)
 
 	return vertexResourse;
 }
+#pragma endregion
 
+#pragma region 単位行列とTransform
 // 単位行列の作成
 Matrix4x4 MakeIdentity4x4() {
 	Matrix4x4 result = {};
@@ -194,22 +269,7 @@ struct Transform
 	Vector3 translate;
 
 };
-
-ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
-
-	//ディスクリプタビュー
-	ID3D12DescriptorHeap* DescriptorHeap = nullptr;
-	D3D12_DESCRIPTOR_HEAP_DESC DescriptorHeapDesc{};
-
-	DescriptorHeapDesc.Type = heapType;
-	DescriptorHeapDesc.NumDescriptors = numDescriptors;
-	DescriptorHeapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	HRESULT hr = device->CreateDescriptorHeap(&DescriptorHeapDesc, IID_PPV_ARGS(&DescriptorHeap));
-	//ディスクリプタヒープが作れなかったので起動できない
-	assert(SUCCEEDED(hr));
-
-	return DescriptorHeap;
-}
+#pragma endregion
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -415,6 +475,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue, hwnd, &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(&swapChain));
 	assert(SUCCEEDED(hr));
 
+
 	ID3D12DescriptorHeap* rtvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
 
 	ID3D12DescriptorHeap* srvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
@@ -489,7 +550,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma endregion
 
 
-
+#pragma region  descriptionRootSignature
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
@@ -502,7 +563,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rootParameters[1].Descriptor.ShaderRegister = 0;
 	descriptionRootSignature.pParameters = rootParameters;
 	descriptionRootSignature.NumParameters = _countof(rootParameters);
-	
+
+
 	ID3DBlob* signatureBlob = nullptr;
 	ID3DBlob* errorBlob = nullptr;
 	hr = D3D12SerializeRootSignature(&descriptionRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
@@ -516,7 +578,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12RootSignature* rootSignature = nullptr;
 	hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
+#pragma endregion
 
+
+#pragma region inputElementDescとgraphicsPinpelineStateDesc
 
 	D3D12_INPUT_ELEMENT_DESC inputElementDesc[1] = {};
 	inputElementDesc[0].SemanticName = "POSITION";
@@ -564,34 +629,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = device->CreateGraphicsPipelineState(&graphicsPinpelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 
+#pragma endregion
+
+
 	ID3D12Resource* vertexResourse = CreateBufferResourse(device, sizeof(Vector4) * 3);
 
-
 	ID3D12Resource* wvpResourse = CreateBufferResourse(device, sizeof(Matrix4x4));
+	//ここから02_01確認課題
+	ID3D12Resource* materialResorse = CreateBufferResourse(device, sizeof(Vector4));
+	Vector4* materialData = nullptr;
+	materialResorse->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 
-	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+
+	//こここで色かえられるよ
+	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//こここで色かえられるよ
 
 
-	//Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-
+	//ここまで
 	Matrix4x4* wvpData = nullptr;
 	wvpResourse->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
 	*wvpData = MakeIdentity4x4();
-
-	//Matrix4x4 cameraMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	//Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-	//Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(1, 1, 1, 1);
-	//Matrix4x4 worldViewProjectionMatrix = MatrixMultipry(worldMatrix, MatrixMultipry(viewMatrix, projectionMatrix));
-
-	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,5.0f,0.0f},{0.0f,0.0f,-5.0f} };
-
-	//Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientwidth) / (kClientHeight), 0.1f, 100.0f);
-
-	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientwidth) / (kClientHeight), 0.1f, 100.0f);
-	//*transformationMatrixData = worldViewProjectionMatrix
 
 	//頂点バッファービューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferview{};
@@ -607,14 +665,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexData[1] = { 0.0f,0.5f,0.0f,1.0f };
 	vertexData[2] = { 0.5f,-0.5f,0.0f,1.0f };
 
-	//ここから02_01確認課題
-	ID3D12Resource* materialResorse = CreateBufferResourse(device, sizeof(Vector4));
-	Vector4* materialData = nullptr;
-	materialResorse->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-	
-	//これで色を変えられる
-	*materialData = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
-	//ここまで
+
 
 	D3D12_VIEWPORT viewport{};
 
@@ -632,6 +683,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	scissorRect.top = 0;
 	scissorRect.bottom = kClientHeight;
 
+	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
+	//Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+
+	MSG msg{};
+
 	//ImGuiの初期化
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -641,7 +698,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
 		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
-	MSG msg{};
+	ImGui::StyleColorsDark();
 
 	//Windowsの罰ボタンが押されるまでループ
 	while (msg.message != WM_QUIT)
@@ -655,12 +712,55 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 		else
 		{
-			//これから書き込むバックアップのインデックスを取得
-			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
-
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
+			ImGui::Begin("SetColor");
+			ImGui::ColorEdit4("*materialData", &materialData->x);
+
+			//ImGui::Begin("Triangle Color Example");
+			//static ImVec4 triangleColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); // 初期色は赤色
+			//// 色を選択できる ImGui のウィジェットを表示
+			//ImGui::ColorEdit4("Triangle Color", (float*)&triangleColor);
+			//ImDrawList* draw_list = ImGui::GetWindowDrawList();
+			//ImVec2 p0 = ImVec2(100.0f, 100.0f);
+			//ImVec2 p1 = ImVec2(200.0f, 100.0f);
+			//ImVec2 p2 = ImVec2(150.0f, 200.0f);
+			//// 選択された色で三角形を描画
+			//draw_list->AddTriangleFilled(p0, p1, p2, ImGui::ColorConvertFloat4ToU32(triangleColor));
+
+
+			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			// WVPMatrixの計算
+			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+			// 透視投影行列の設定
+			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientwidth) / float(kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 worldViewProjectionMatrix = MatrixMultipry(worldMatrix, MatrixMultipry(viewMatrix, projectionMatrix));
+			*wvpData = worldViewProjectionMatrix;
+
+
+			//ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.0f, 0.7f, 0.2f, 1.0f));
+			//ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.0f, 0.3f, 0.1f, 1.0f));
+			//ImGui::SetNextWindowPos(ImVec2(20, 20), &transform.scale);
+			//ImGui::SetNextWindowSize(ImVec2(200, 300), ImGuiSetCond_Once);
+
+			//ImGui::Begin("config 1");
+
+			//static float slider1 = 0.0;
+			//static char text1[8] = "";
+
+			//ImGui::Text("fps: %.2f", getFrameRate());
+			//ImGui::SliderFloat("slider 1", &slider1, 0.0f, 1.0f);
+			//ImGui::InputText("textbox 1", text1, sizeof(text1));
+			//if (ImGui::Button("button 1")) {
+			//	slider1 = 0.0f;
+			//	strcpy(text1, "button 1");
+			//}
+
+			//これから書き込むバックアップのインデックスを取得
+			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
 
 			//TransitionBarrier
 			D3D12_RESOURCE_BARRIER barrier{};
@@ -671,7 +771,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//バリアを張る対象のリソース。現在のバッファに対して行う
 			barrier.Transition.pResource = swapChainResource[backBufferIndex];
 			//
-			
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -687,6 +786,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//コマンドリストの内容を確定させる。すべてのコマンドを積んでからCloseすること
 			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 
+
+			ID3D12DescriptorHeap* descriptHeaps[] = { srvDescriptorHeap };
+			commandList->SetDescriptorHeaps(1, descriptHeaps);
+
 			commandList->RSSetViewports(1, &viewport);
 			commandList->RSSetScissorRects(1, &scissorRect);
 			commandList->SetGraphicsRootSignature(rootSignature);
@@ -694,17 +797,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferview);
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-			ID3D12DescriptorHeap* descriptHeaps[] = { srvDescriptorHeap };
-			commandList->SetDescriptorHeaps(1, descriptHeaps);
 
+			ImGui::End();
+			ImGui::Render();
 
-			//ここから00_02
-			//commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
-
+			//ここいじると回転する
 			transform.rotate.y += 0.03f;
-			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-			*wvpData = worldMatrix;
+			//ここいじると終わる
+			//*wvpData = worldMatrix;
 
+			commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResourse->GetGPUVirtualAddress());
 			//ここから00_02
 
@@ -716,15 +818,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//今回はRenderTargeからPresentにする
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-			
 			//TransitionBarrierを張る
 			commandList->ResourceBarrier(1, &barrier);
 
 			hr = commandList->Close();
 			assert(SUCCEEDED(hr));
 			//ゲームの処理
-
-			ImGui::ShowDemoWindow();
 
 			//GPUにコマンドリストの実行を行わせる
 			ID3D12CommandList* commandLists[] = { commandList };
@@ -737,15 +836,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			commandQueue->Signal(fence, fenceValue);
 
-			if (fence->GetCompletedValue()<fenceValue)
+			if (fence->GetCompletedValue() < fenceValue)
 			{
 				fence->SetEventOnCompletion(fenceValue, fenceEvent);
 
 				WaitForSingleObject(fenceEvent, INFINITE);
 			}
 
-
-			ImGui::Render();
 
 			//次のコマンド用のコマンドリストを用意
 			hr = commandAllocator->Reset();
@@ -755,6 +852,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			assert(SUCCEEDED(hr));
 		}
 	}
+
+	CoUninitialize();
+
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 
 	//解放処理
 	CloseHandle(fenceEvent);
@@ -786,9 +889,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	materialResorse->Release();
 
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
 
 
 #ifdef _DEBUG
