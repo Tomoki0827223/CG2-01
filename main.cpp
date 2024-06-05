@@ -719,7 +719,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ID3D12Resource* wvpResourse = CreateBufferResource(device, sizeof(Matrix4x4));
 	//ここから02_01確認課題
-	ID3D12Resource* materialResorse = CreateBufferResource(device, sizeof(Vector4));
+	ID3D12Resource* materialResorse = CreateBufferResource(device, sizeof(VertexData));
 	Vector4* materialData = nullptr;
 	materialResorse->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 
