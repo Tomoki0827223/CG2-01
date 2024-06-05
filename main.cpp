@@ -582,15 +582,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma region  descriptionRootSignature
 
-	D3D12_DESCRIPTOR_RANGE descriptorRanges[2] = {};
-	descriptorRanges[0].BaseShaderRegister = 3; // から始まる
-	descriptorRanges[0].NumDescriptors = 2; // 数は1つ
-	descriptorRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV; // SRVを使う
-	descriptorRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND; // Offsetを自動計算
-	descriptorRanges[1].BaseShaderRegister = 0; // から始まる
-	descriptorRanges[1].NumDescriptors = 3; // 数は1つ
-	descriptorRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	descriptorRanges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND; // Offsetを自動計算
+	//D3D12_DESCRIPTOR_RANGE descriptorRanges[2] = {};
+	//descriptorRanges[0].BaseShaderRegister = 3; // から始まる
+	//descriptorRanges[0].NumDescriptors = 2; // 数は1つ
+	//descriptorRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV; // SRVを使う
+	//descriptorRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND; // Offsetを自動計算
+	//descriptorRanges[1].BaseShaderRegister = 0; // から始まる
+	//descriptorRanges[1].NumDescriptors = 3; // 数は1つ
+	//descriptorRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	//descriptorRanges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND; // Offsetを自動計算
 
 
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
@@ -605,15 +605,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	descriptionRootSignature.NumParameters = _countof(rootParameters);
 
 
-	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
-	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR; // バイリニアフィルタ
-	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP; // 0~1の範囲外をリピート
-	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER; // 比較しない
-	staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX; // ありったけのMipmapを使う
-	staticSamplers[0].ShaderRegister = 0; // レジスタ番号を使う
-	staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // Pixel Shaderで使う
+	//D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
+	//staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR; // バイリニアフィルタ
+	//staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP; // 0~1の範囲外をリピート
+	//staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	//staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	//staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER; // 比較しない
+	//staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX; // ありったけのMipmapを使う
+	//staticSamplers[0].ShaderRegister = 0; // レジスタ番号を使う
+	//staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // Pixel Shaderで使う
 
 
 	ID3DBlob* signatureBlob = nullptr;
@@ -634,20 +634,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma region inputElementDescとgraphicsPinpelineStateDesc
 
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[2] = {};
-
-	inputElementDescs[0].SemanticName = "POSITION";
-	inputElementDescs[0].SemanticIndex = 0;
-	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	inputElementDescs[1].SemanticName = "TEXCOORD";
-	inputElementDescs[1].SemanticIndex = 0;
-	inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-
+	D3D12_INPUT_ELEMENT_DESC inputElementDesc[2] = {};
+	inputElementDesc[0].SemanticName = "POSITION";
+	inputElementDesc[0].SemanticIndex = 0;
+	inputElementDesc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	inputElementDesc[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDesc[1].SemanticName = "TEXCOORD";
+	inputElementDesc[1].SemanticIndex = 0;
+	inputElementDesc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+	inputElementDesc[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
-	inputLayoutDesc.pInputElementDescs = inputElementDescs;
-	inputLayoutDesc.NumElements = _countof(inputElementDescs);
+	inputLayoutDesc.pInputElementDescs = inputElementDesc;
+	inputLayoutDesc.NumElements = _countof(inputElementDesc);
 
 	D3D12_BLEND_DESC blendDesc{};
 	blendDesc.RenderTarget[0].RenderTargetWriteMask =
