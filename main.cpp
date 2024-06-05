@@ -224,6 +224,7 @@ struct VertexData
 	Vector4 position;
 	Vector2 texcood;
 };
+
 #pragma endregion
 
 #pragma region Textureデータ読み込み
@@ -581,11 +582,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma region  descriptionRootSignature
 
-	D3D12_DESCRIPTOR_RANGE descriptorRanges[1] = {};
-	descriptorRanges[0].BaseShaderRegister = 0; // から始まる
-	descriptorRanges[0].NumDescriptors = 1; // 数は1つ
+	D3D12_DESCRIPTOR_RANGE descriptorRanges[2] = {};
+	descriptorRanges[0].BaseShaderRegister = 3; // から始まる
+	descriptorRanges[0].NumDescriptors = 2; // 数は1つ
 	descriptorRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV; // SRVを使う
 	descriptorRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND; // Offsetを自動計算
+	descriptorRanges[1].BaseShaderRegister = 0; // から始まる
+	descriptorRanges[1].NumDescriptors = 3; // 数は1つ
+	descriptorRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	descriptorRanges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND; // Offsetを自動計算
 
 
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
@@ -684,7 +689,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma endregion
 
 
-	ID3D12Resource* vertexResourse = CreateBufferResource(device, sizeof(Vector4) * 3);
+	ID3D12Resource* vertexResourse = CreateBufferResource(device, sizeof(VertexData) * 3);
 
 	ID3D12Resource* wvpResourse = CreateBufferResource(device, sizeof(Matrix4x4));
 	//ここから02_01確認課題
@@ -707,8 +712,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferview{};
 
 	vertexBufferview.BufferLocation = vertexResourse->GetGPUVirtualAddress();
-	vertexBufferview.SizeInBytes = sizeof(Vector4) * 3;
-	vertexBufferview.StrideInBytes = sizeof(Vector4);
+	vertexBufferview.SizeInBytes = sizeof(VertexData) * 3;
+	vertexBufferview.StrideInBytes = sizeof(VertexData);
 
 	// 頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
