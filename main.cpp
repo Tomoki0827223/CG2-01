@@ -10,6 +10,9 @@
 #include <d3d11.h>
 
 #include "externals/DirectXTex/DirectXTex.h"
+#include "externals/DirectXTex/d3dx12.h"
+
+#include <vector>
 
 #include "Vector4.h"
 #include "Vector3.h"
@@ -173,7 +176,7 @@ IDxcBlob* CompileShader(
 ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes)
 {
 	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
-	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+	uploadHeapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
 
 	D3D12_RESOURCE_DESC resourceDesc{};
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -189,7 +192,7 @@ ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes)
 		&uploadHeapProperties,
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
+		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
 		IID_PPV_ARGS(&resource));
 	assert(SUCCEEDED(hr));
@@ -280,23 +283,27 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
 
 
 
-void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages)
+[[nodiscard]]
+ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device,
+	ID3D12GraphicsCommandList* commandList)
 {
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	std::vector<D3D12_SUBRESOURCE_DATA> subresources;
+	DirectX::PrepareUpload(device, mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subresources);
+	uint64_t intermediateSize = GetRequiredIntermediateSize(texture, 0, UINT(subresources.size()));
+	ID3D12Resource* intermediateResource = CreateBufferResource(device, intermediateSize);
+	UpdateSubresources(commandList, texture, intermediateResource, 0, 0, UINT(subresources.size()), subresources.data());
 
-	for (size_t mipLevel = 0; mipLevel < metadata.mipLevels; mipLevel++)
-	{
-		const DirectX::Image* img = mipImages.GetImage(mipLevel, 0, 0);
+	// Tetureへの転送後は利用できるよう、D3D12_RESOURCE_STATE_COPY_DESTからD3D12_RESOURCE_STATE_GENERIC_READ ResourceStateを変更する
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = texture;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
+	commandList->ResourceBarrier(1, &barrier);
 
-		HRESULT hr = texture->WriteToSubresource(
-			UINT(mipLevel),
-			nullptr,
-			img->pixels,
-			UINT(img->rowPitch),
-			UINT(img->slicePitch)
-		);
-		assert(SUCCEEDED(hr));
-	}
+	return intermediateResource;
 }
 
 #pragma endregion
@@ -510,17 +517,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ID3D12DescriptorHeap* srvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
 
-	////ディスクリプタビュー
-	//ID3D12DescriptorHeap* rtvDescriptorHeap = nullptr;
-	//D3D12_DESCRIPTOR_HEAP_DESC rtvDescriptorHeapDesc{};
-
-	//rtvDescriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;//レンダーターゲットビュー用
-	//rtvDescriptorHeapDesc.NumDescriptors = 2;//ダブルバッファ用に２つ。多くても構わない
-
-	//hr = device->CreateDescriptorHeap(&rtvDescriptorHeapDesc, IID_PPV_ARGS(&rtvDescriptorHeap));
-	////ディスクリプタヒープが作れなかったので起動できない
-	//assert(SUCCEEDED(hr));
-
 	//swapchainからリソースを引っ張る
 	ID3D12Resource* swapChainResource[2] = { nullptr };
 
@@ -690,7 +686,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DirectX::ScratchImage mipImages = LordTexture("resourse/uvChecker.png");
 	const DirectX::TexMetadata& metdata = mipImages.GetMetadata();
 	ID3D12Resource* textureResourse = CreateTextureResource(device, metdata);
-	UploadTextureData(textureResourse, mipImages);
+	ID3D12Resource* intermediateResource = UploadTextureData(textureResourse, mipImages, device, commandList);
 
 	// metaDataを基にSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
