@@ -785,142 +785,126 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ImGui::StyleColorsDark();
 
-	//Windowsの罰ボタンが押されるまでループ
-	while (msg.message != WM_QUIT)
-	{
+	while (msg.message != WM_QUIT) {
 
-		//Windowsにメッセージが来てたら最優先で処理させる
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-		{
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		else
-		{
+		else {
+
+			//ゲーム処理
+
+			transform.rotate.y += 0.03f;
+			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientwidth) / float(kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 worldViewProjectionMatrix = Multipry(worldMatrix, Multipry(viewMatrix, projectionMatrix));
+			//	*transformationMatrixData = 
+			*wvpData = worldViewProjectionMatrix;
+
+
+
+
+
+			//これから書き込むバッファのインデックスを取得
+			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
 			ImGui::Begin("SetColor");
 			ImGui::ColorEdit4("*materialData", &materialData->x);
-
-			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-			// WVPMatrixの計算
-			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-			// 透視投影行列の設定
-			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientwidth) / float(kClientHeight), 0.1f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrix = MatrixMultipry(worldMatrix, MatrixMultipry(viewMatrix, projectionMatrix));
-			*wvpData = worldViewProjectionMatrix;
-
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤のテキスト色をプッシュ
-			ImGui::Text("Red Text");
-
-			// 色をポップして元に戻す
-			ImGui::PopStyleColor();
-
-			//ImGui::Begin("Particle System");
-			//DrawParticles();
-
-			//これから書き込むバックアップのインデックスを取得
-			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+			ImGui::End();
+			ImGui::ShowDemoWindow();
+			ImGui::Render();
 
 
-			//TransitionBarrier
 			D3D12_RESOURCE_BARRIER barrier{};
-			//今回のバリアはTransition
+
 			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-			//Noneにしておく
+
 			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-			//バリアを張る対象のリソース。現在のバッファに対して行う
+
 			barrier.Transition.pResource = swapChainResource[backBufferIndex];
-			//
+
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-			//TransitionBarrierを張る
-			commandList->ResourceBarrier(1, &barrier);
 
+
+
+			commandList->ResourceBarrier(1, &barrier);
+			//////////////////////////////////////////////
 
 			//描画先のRTVを設定する
 			commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
 			//指定した色で画面全体をクリアする
-			//青っぽい色。RGBAの順
-			float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };
-			//コマンドリストの内容を確定させる。すべてのコマンドを積んでからCloseすること
+			float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
 			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 
-
-			ID3D12DescriptorHeap* descriptHeaps[] = { srvDescriptorHeap };
-			commandList->SetDescriptorHeaps(1, descriptHeaps);
+			//描画用のDescriptorHeapの設定
+			ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap };
+			commandList->SetDescriptorHeaps(1, descriptorHeaps);
 
 			commandList->RSSetViewports(1, &viewport);
 			commandList->RSSetScissorRects(1, &scissorRect);
+			//RootSignatureを設定。PSOに設定しているけど別途設定が必要
 			commandList->SetGraphicsRootSignature(rootSignature);
 			commandList->SetPipelineState(graphicsPipelineState);
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferview);
-			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-
-			ImGui::End();
-			//RenderImGui();
-			ImGui::ShowDemoWindow();
-			ImGui::Render();
-
-			//ここから00_02
-			//commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
-
-			transform.rotate.y += 0.0f;
-			//*wvpData = worldMatrix;
-
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferview);//
 			commandList->SetGraphicsRootConstantBufferView(0, materialResorse->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResourse->GetGPUVirtualAddress());
-			//ここから00_02
-
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			//形状を設定。PSOに設定しているものとはまた別、同じものを設定すると考えておけば良い
+			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			//描画　（DrawCall/drawコール）　。　3頂点で1つのインスタンス。
 			commandList->DrawInstanced(3, 1, 0, 0);
 
-			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 
-			//画面に各処理はすべて終わり、画面に移すので、状態を憑依
-			//今回はRenderTargeからPresentにする
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+			//実際のcommandListのImGuiの描画コマンドを積む
+			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-			//TransitionBarrierを張る
+
 			commandList->ResourceBarrier(1, &barrier);
 
+
+			//コマンドリストの内容を確定させる。　すべてのコマンドを頼んでからclauseすること
 			hr = commandList->Close();
 			assert(SUCCEEDED(hr));
-			//ゲームの処理
+
 
 			//GPUにコマンドリストの実行を行わせる
 			ID3D12CommandList* commandLists[] = { commandList };
 			commandQueue->ExecuteCommandLists(1, commandLists);
-			//GPUとOSに画面の交換を行うように通知する
+			//　GPUとOSに画面の交換を行うように通知する
 			swapChain->Present(1, 0);
 
 
 			fenceValue++;
-
 			commandQueue->Signal(fence, fenceValue);
 
-			if (fence->GetCompletedValue() < fenceValue)
-			{
+			if (fence->GetCompletedValue() < fenceValue) {
+
 				fence->SetEventOnCompletion(fenceValue, fenceEvent);
 
 				WaitForSingleObject(fenceEvent, INFINITE);
+
 			}
 
 
-			//次のコマンド用のコマンドリストを用意
+			//次のフレーム用のコマンドリストを準備
 			hr = commandAllocator->Reset();
 			assert(SUCCEEDED(hr));
-
 			hr = commandList->Reset(commandAllocator, nullptr);
 			assert(SUCCEEDED(hr));
+
+
 		}
 	}
 
-	CoUninitialize();
 
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
@@ -977,6 +961,5 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Log("Hallo,DirectX!\n");
 
-	CoUninitialize();
 	return 0;
 }
