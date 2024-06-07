@@ -1,7 +1,7 @@
 #include "affine.h"
 
 
-Matrix4x4 MatrixMultipry(const Matrix4x4& matrix1, const Matrix4x4& matrix2) {
+Matrix4x4 Multiply(const Matrix4x4& matrix1, const Matrix4x4& matrix2) {
 	Matrix4x4 result;
 
 	for (int i = 0; i < 4; ++i) {
@@ -19,7 +19,7 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 	Matrix4x4 rotateMat = MakeRotateMatrix(rotate);
 	Matrix4x4 translateMat = MakeTranslateMatrix(translate);
 
-	return MatrixMultipry(MatrixMultipry(translateMat, rotateMat), scaleMat);
+	return Multiply(Multiply(translateMat, rotateMat), scaleMat);
 }
 
 Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
@@ -54,7 +54,7 @@ Matrix4x4 MakeRotateMatrix(const Vector3& rotate) {
 
 	Matrix4x4 rotateZ = { cosf(rotate.z), -sinf(rotate.z), 0, 0, sinf(rotate.z), cosf(rotate.z), 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
 
-	return MatrixMultipry(MatrixMultipry(rotateZ, rotateY), rotateX);
+	return Multiply(Multiply(rotateZ, rotateY), rotateX);
 }
 
 Matrix4x4 Inverse(const Matrix4x4& m) {

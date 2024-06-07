@@ -813,7 +813,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 			// 透視投影行列の設定
 			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientwidth) / float(kClientHeight), 0.1f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrix = MatrixMultipry(worldMatrix, MatrixMultipry(viewMatrix, projectionMatrix));
+			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 			*wvpData = worldViewProjectionMatrix;
 
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤のテキスト色をプッシュ
