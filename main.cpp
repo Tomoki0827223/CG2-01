@@ -279,7 +279,38 @@ ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMe
 
 }
 
+ID3D12Resource* CreateDepthStencilTextureResouces(ID3D12Device* device, int32_t width, int32_t height)
+{
+	D3D12_RESOURCE_DESC resourceDesc{};
+	resourceDesc.Width = width;
+	resourceDesc.Height = height;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
+
+	D3D12_HEAP_PROPERTIES heapProperties{};
+	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+	D3D12_CLEAR_VALUE depthClearValue{};
+	depthClearValue.DepthStencil.Depth = 1.0f;
+	depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	//Resourceの生成
+	ID3D12Resource* resource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthClearValue,
+		IID_PPV_ARGS(&resource));
+	assert(SUCCEEDED(hr));
+	return resource;
+}
 
 void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages)
 {
@@ -695,7 +726,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	
 	ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
+	ID3D12Resource* depthStencilResouce = CreateDepthStencilTextureResouces(device, kClientwidth, kClientHeight);
+
+
 	UploadTextureData(textureResource, mipImages);
 
 	//metaDataを基にSRVの設定
@@ -720,7 +755,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma endregion
 
 
-	ID3D12Resource* vertexResourse = CreateBufferResource(device, sizeof(VertexData) * 3);
+	ID3D12Resource* vertexResourse = CreateBufferResource(device, sizeof(VertexData) * 6);
 
 	ID3D12Resource* wvpResourse = CreateBufferResource(device, sizeof(Matrix4x4));
 	//ここから02_01確認課題
@@ -743,7 +778,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferview{};
 
 	vertexBufferview.BufferLocation = vertexResourse->GetGPUVirtualAddress();
-	vertexBufferview.SizeInBytes = sizeof(VertexData) * 3;
+	vertexBufferview.SizeInBytes = sizeof(VertexData) * 6;
 	vertexBufferview.StrideInBytes = sizeof(VertexData);
 
 	//頂点リソースにデータを書き込む
@@ -759,6 +794,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//右下
 	vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
 	vertexData[2].texcoord = { 1.0f, 1.0f };
+	//左下
+
+
+
+
+
+	vertexData[3].position = { -0.5, -0.5f, 0.5f, 1.0f };
+	vertexData[3].texcoord = { 0.0f, 1.0f };
+	//上
+	vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
+	vertexData[4].texcoord = { 0.5f,0.0f };
+	//右下
+	vertexData[5].position = { 0.5f, -0.5f, 0.5f, 1.0f };
+	vertexData[5].texcoord = { 1.0f, 1.0f };
+
 
 	D3D12_VIEWPORT viewport{};
 
@@ -869,7 +919,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//形状を設定。PSOに設定しているものとはまた別、同じものを設定すると考えておけば良い
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			//描画　（DrawCall/drawコール）　。　3頂点で1つのインスタンス。
-			commandList->DrawInstanced(3, 1, 0, 0);
+			commandList->DrawInstanced(6, 1, 0, 0);
 
 
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -947,6 +997,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexShaderBlob->Release();
 
 	textureResource->Release();
+	depthStencilResouce->Release();
 	materialResorse->Release();
 
 
