@@ -224,9 +224,6 @@ struct VertexData {
 	Vector2 texcoord;
 };
 
-bool DepthFunc(float curZ, float prevZ) {
-	return curZ <= prevZ;
-}
 
 #pragma endregion
 
