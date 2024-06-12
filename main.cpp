@@ -723,7 +723,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma endregion
 
 
-	ID3D12Resource* vertexResourse = CreateBufferResource(device, sizeof(VertexData) * 3);
+	ID3D12Resource* vertexResourse = CreateBufferResource(device, sizeof(VertexData) * 6);
 
 	ID3D12Resource* wvpResourse = CreateBufferResource(device, sizeof(Matrix4x4));
 	//ここから02_01確認課題
@@ -746,7 +746,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferview{};
 
 	vertexBufferview.BufferLocation = vertexResourse->GetGPUVirtualAddress();
-	vertexBufferview.SizeInBytes = sizeof(VertexData) * 3;
+	vertexBufferview.SizeInBytes = sizeof(VertexData) * 6;
 	vertexBufferview.StrideInBytes = sizeof(VertexData);
 
 	//頂点リソースにデータを書き込む
@@ -762,6 +762,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//右下
 	vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
 	vertexData[2].texcoord = { 1.0f, 1.0f };
+
+	//左下
+	vertexData[3].position = { -0.5, -0.5f, 0.5f, 1.0f };
+	vertexData[3].texcoord = { 0.0f, 1.0f };
+	//上
+	vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
+	vertexData[4].texcoord = { 0.5f,0.0f };
+	//右下
+	vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
+	vertexData[5].texcoord = { 1.0f, 1.0f };
 
 	D3D12_VIEWPORT viewport{};
 
@@ -807,7 +817,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			//ゲーム処理
 
-			transform.rotate.y += 0.03f;
+			transform.rotate.y += 0.009f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
@@ -872,7 +882,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//形状を設定。PSOに設定しているものとはまた別、同じものを設定すると考えておけば良い
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			//描画　（DrawCall/drawコール）　。　3頂点で1つのインスタンス。
-			commandList->DrawInstanced(3, 1, 0, 0);
+			commandList->DrawInstanced(6, 1, 0, 0);
 
 
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
