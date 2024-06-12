@@ -985,6 +985,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	fence->Release();
 	rtvDescriptorHeap->Release();
 	srvDescriptorHeap->Release();
+	dsvDescriptorHeap->Release();
+
 	swapChainResource[0]->Release();
 	swapChainResource[1]->Release();
 	swapChain->Release();
@@ -1012,8 +1014,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	intermediateResources->Release();
 	
 	depthStencilResouce->Release();
-
-
 
 #ifdef _DEBUG
 	debugController->Release();
