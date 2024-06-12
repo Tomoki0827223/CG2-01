@@ -735,6 +735,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
 	ID3D12Resource* intermediateResources = UploadTextureData(textureResource, mipImages, device, commandList);
 
+	ID3D12Resource* depthStencilResouce = CreateDepthStencilTextureResouces(device, kClientwidth, kClientHeight);
+
 	//metaDataを基にSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Format = metadata.format;
@@ -996,6 +998,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	textureResource->Release();
 	materialResorse->Release();
 	intermediateResources->Release();
+	
+	depthStencilResouce->Release();
 
 
 
