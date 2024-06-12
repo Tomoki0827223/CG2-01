@@ -338,6 +338,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	(
 		//利用するクラス名
 		wc.lpszClassName,
+		
 		//タイトルバーの文字（何でもいい）
 		L"CG2",
 		//よく見るウインドウスタイル
