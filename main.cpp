@@ -1027,7 +1027,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 	}
 
-
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
@@ -1041,36 +1040,43 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	swapChainResource[0]->Release();
 	swapChainResource[1]->Release();
+
 	swapChain->Release();
 	commandList->Release();
 	commandAllocator->Release();
 	commandQueue->Release();
+
 	device->Release();
 	useadapter->Release();
 	dxgiFactory->Release();
 	wvpResourse->Release();
-
 	vertexResourse->Release();
 	graphicsPipelineState->Release();
 	signatureBlob->Release();
+	rootSignature->Release();
+	pixelShaderBlob->Release();
+	vertexShaderBlob->Release();
+	
+	textureResource->Release();
+	materialResorse->Release();
+	transformationMatrixResourceSprite->Release();
+	
+	intermediateResources->Release();
+	depthStencilResouce->Release();
+	vertexResourceSprite->Release();
+
+
 	if (errorBlob)
 	{
 		errorBlob->Release();
 	}
-	rootSignature->Release();
-	pixelShaderBlob->Release();
-	vertexShaderBlob->Release();
-
-	textureResource->Release();
-	materialResorse->Release();
-	transformationMatrixResourceSprite->Release();
-	intermediateResources->Release();
-
-	depthStencilResouce->Release();
 
 #ifdef _DEBUG
+
 	debugController->Release();
+
 #endif
+
 
 
 	CloseWindow(hwnd);
