@@ -1049,6 +1049,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	device->Release();
 	useadapter->Release();
 	dxgiFactory->Release();
+
 	wvpResourse->Release();
 	vertexResourse->Release();
 	graphicsPipelineState->Release();
