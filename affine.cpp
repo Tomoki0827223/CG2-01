@@ -157,3 +157,19 @@ Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip
 
     return result;
 }
+
+Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip)
+{
+    Matrix4x4 orthoMatrix;
+
+    // 行列の計算
+    orthoMatrix.m[0][0] = 2.0f / (right - left);
+    orthoMatrix.m[1][1] = 2.0f / (top - bottom);
+    orthoMatrix.m[2][2] = -2.0f / (farClip - nearClip);
+    orthoMatrix.m[3][3] = 1.0f;
+    orthoMatrix.m[3][0] = -(right + left) / (right - left);
+    orthoMatrix.m[3][1] = -(top + bottom) / (top - bottom);
+    orthoMatrix.m[3][2] = -(farClip + nearClip) / (farClip - nearClip);
+
+    return orthoMatrix;
+}
