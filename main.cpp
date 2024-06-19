@@ -815,7 +815,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
-	vertecDataShere[stat + 0] = vertA;
+	//vertecDataShere[stat + 0] = vertA;
 
 	//こここで色かえられるよ
 	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
