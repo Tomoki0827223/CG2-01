@@ -218,7 +218,7 @@ Matrix4x4 MakeIdentity4x4() {
 	return result;
 }
 
-struct Transform
+struct TransformVector3
 {
 	Vector3 scale;
 	Vector3 rotate;
@@ -902,8 +902,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	scissorRect.bottom = kClientHeight;
 
 
-	Transform() transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-	Transform() cameraTransform { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
+	TransformVector3 transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	TransformVector3 cameraTransform { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 
 
@@ -929,19 +929,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		else {
 
 			//ゲーム処理
-			//Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraMatrix, cameraTranslate);
+			Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, , cameraTransform);
 
-			//Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-			//Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindoWidth) / float(kWindowHeight), 0.1f, 100.0f);
-			//Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindoWidth), float(kWindowHeight), 0.0f, 1.0f);
-			// ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
+			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientwidth) / float(kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kClientwidth), float(kClientHeight), 0.0f, 1.0f);
+			viewportMatrix = Multiply(viewMatrix, projectionMatrix);
 
 			// Sprite用のWorldViewProjection Matrixを作る
-			//Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
 			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientwidth), float(kClientHeight), 0.0f, 100.0f); 
-			//Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
-			//*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
+			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
+			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
 
 
 
