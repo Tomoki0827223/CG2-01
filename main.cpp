@@ -826,7 +826,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 書き込むためのアドレスを取得
 	vertexResourse->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 
-	static inline const int32_t kSubdivision = 16;
+	static const int32_t kSubdivision = 16;
 	const float kLonEvery = std::numbers::pi_v<float> * 2.0f / float(kSubdivision);
 	const float klatEvery = std::numbers::pi_v<float> / float(kSubdivision);
 
@@ -929,7 +929,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		else {
 
 			//ゲーム処理
-			Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, , cameraTransform);
+			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientwidth) / float(kClientHeight), 0.1f, 100.0f);
