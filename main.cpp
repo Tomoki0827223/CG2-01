@@ -9,6 +9,7 @@
 #include <dxcapi.h>
 #include <d3d11.h>
 #include <vector>
+#include <numbers>
 
 #include "externals/DirectXTex/DirectXTex.h"
 
@@ -791,23 +792,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 1頂点あたりのサイズ
 	vertexBufferViewSprite.StrideInBytes = sizeof(VertexData);
 
-	//VertexData* vertexDataSprite = nullptr;
-	//vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
-	//// 1枚目の三角形
-	//vertexDataSprite[0].position = { 0.0f, 360.0f, 0.0f, 1.0f };//左下
-	//vertexDataSprite[0].texcoord = { 0.0f, 1.0f };
-	//vertexDataSprite[1].position = { 0.0f, 0.0f, 0.0f, 1.0f };//左上
-	//vertexDataSprite[1].texcoord = { 0.0f, 0.0f };
-	//vertexDataSprite[2].position = { 640.0f, 360.0f, 0.0f, 1.0f };//右下
-	//vertexDataSprite[2].texcoord = { 1.0f, 1.0f };
-	//// 2枚目の三角形
-	//vertexDataSprite[3].position = { 0.0f, 0.0f, 0.0f, 1.0f };//左上
-	//vertexDataSprite[3].texcoord = { 0.0f, 0.0f };
-	//vertexDataSprite[4].position = { 640.0f, 0.0f, 0.0f, 1.0f };//右上
-	//vertexDataSprite[4].texcoord = { 1.0f, 0.0f };
-	//vertexDataSprite[5].position = { 640.0f, 360.0f, 0.0f, 1.0f };//右下
-	//vertexDataSprite[5].texcoord = { 1.0f,1.0f };
-
 
 	// Sprite用のTransformation Matrix用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
 	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(Matrix4x4));
@@ -818,9 +802,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//単位行列を書きこんでおく
 	*transformationMatrixDataSprite = MakeIdentity4x4();
 
-	Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-
-	//vertecDataShere[stat + 0] = vertA;
 
 	//こここで色かえられるよ
 	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -845,11 +826,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 書き込むためのアドレスを取得
 	vertexResourse->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 
-	const float kLonEvery = pi * 2.0f / float(kSubdivision);
-	const float klatEvery = pi / float(kSubdivision);
+	static inline const int32_t kSubdivision = 16;
+	const float kLonEvery = std::numbers::pi_v<float> * 2.0f / float(kSubdivision);
+	const float klatEvery = std::numbers::pi_v<float> / float(kSubdivision);
 
 	for (int latIndex = 0; latIndex <= kSubdivision; ++latIndex) {
-		float lat = pi / 2.0f - klatEvery * latIndex;
+		float lat = std::numbers::pi_v<float> / 2.0f - klatEvery * latIndex;
 
 		for (int lonIndex = 0; lonIndex <= kSubdivision; ++lonIndex) {
 			uint32_t start = (latIndex * (kSubdivision + 1) + lonIndex) * 6;
@@ -921,7 +903,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
-	//Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 
 
 	MSG msg{};
@@ -946,19 +928,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		else {
 
 			//ゲーム処理
-			Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, cameraTranslate);
+			//Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraMatrix, cameraTranslate);
 
-			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindoWidth) / float(kWindowHeight), 0.1f, 100.0f);
-			Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindoWidth), float(kWindowHeight), 0.0f, 1.0f);
-			Matrix4x4 ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
+			//Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+			//Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindoWidth) / float(kWindowHeight), 0.1f, 100.0f);
+			//Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindoWidth), float(kWindowHeight), 0.0f, 1.0f);
+			// ViewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 
 			// Sprite用のWorldViewProjection Matrixを作る
-			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+			//Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
 			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientwidth), float(kClientHeight), 0.0f, 100.0f); 
-			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
-			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
+			//Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
+			//*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
 
 
 
@@ -1022,7 +1004,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//形状を設定。PSOに設定しているものとはまた別、同じものを設定すると考えておけば良い
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			//描画　（DrawCall/drawコール）　。　3頂点で1つのインスタンス。
-			commandList->DrawInstanced(6, 1, 0, 0);
+			//commandList->DrawInstanced(6, 1, 0, 0);
 
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
