@@ -971,12 +971,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
-			ImGui::Begin("Color Picker");
+			ImGui::Begin("Color");
 			ImGui::ColorEdit4("Text Color With Flags", &materialData->x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
 			ImGui::End();
 
 			// ImGuiウィンドウの作成
-			ImGui::Begin("Transform Controls");
+			ImGui::Begin("Ball Controls");
 			ImGui::SliderFloat3("Position", &transform.translate.x, -5.0f, 5.0f);
 			ImGui::SliderFloat3("Rotation", &transform.rotate.x, -180.0f, 180.0f);
 			ImGui::SliderFloat3("Scale", &transform.scale.x, 0.1f, 2.0f);
@@ -1041,7 +1041,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 			// 描画 (DrawCall/ドローコール)
 			//04_00スプライトを表示しよう！
-			commandList->DrawInstanced(6, 1, 0, 0);
+			//commandList->DrawInstanced(6, 1, 0, 0);
 
 
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
