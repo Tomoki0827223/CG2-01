@@ -795,60 +795,62 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 
+	float w = 1.0f;
 	const float kLonEvery = std::numbers::pi_v<float> *2.0f / float(kSubdivision);
 	const float klatEvery = std::numbers::pi_v<float> / float(kSubdivision);
 
-	for (int latIndex = 0; latIndex <= kSubdivision; ++latIndex) {
-		float lat = std::numbers::pi_v<float> / 2.0f - klatEvery * latIndex;
+	// 緯度の方向に分割 -π/2 〜 π/2
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		float lat = -float(M_PI) / 2.0f + klatEvery * latIndex; // 現在の緯度
 
-		for (int lonIndex = 0; lonIndex <= kSubdivision; ++lonIndex) {
-			uint32_t start = (latIndex * (kSubdivision + 1) + lonIndex) * 6;
-			float lon = lonIndex * kLonEvery;
+		// 経度の方向に分割 0 〜 2π
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			float lon = lonIndex * kLonEvery; // 現在の経度
 
-			float u = static_cast<float>(lonIndex) / static_cast<float>(kSubdivision);
-			float v = 1.0f - static_cast<float>(latIndex) / static_cast<float>(kSubdivision);
+			uint32_t starIndex = (latIndex * kSubdivision + lonIndex) * 6;
 
-			// First vertex
-			vertexData[start].position.x = cos(lat) * cos(lon);
-			vertexData[start].position.y = sin(lat);
-			vertexData[start].position.z = cos(lat) * sin(lon);
-			vertexData[start].position.w = 1.0f;
-			vertexData[start].texcoord = { u, v };
+			//a position
+			vertexData[starIndex].position.x = std::cosf(lat) * std::cosf(lon);
+			vertexData[starIndex].position.y = std::sinf(lat);
+			vertexData[starIndex].position.z = std::cosf(lat) * std::sinf(lon);
+			vertexData[starIndex].position.w = w;
+			vertexData[starIndex].texcoord = { float(lonIndex) / float(kSubdivision), 1.0f - float(latIndex) / float(kSubdivision) };
 
-			// Second vertex
-			vertexData[start + 1].position.x = cos(lat) * cos(lon + kLonEvery);
-			vertexData[start + 1].position.y = sin(lat);
-			vertexData[start + 1].position.z = cos(lat) * sin(lon + kLonEvery);
-			vertexData[start + 1].position.w = 1.0f;
-			vertexData[start + 1].texcoord = { u + 1.0f / static_cast<float>(kSubdivision), v };
+			// b positopn
+			vertexData[starIndex + 1].position.x = std::cosf(lat + klatEvery) * std::cosf(lon);
+			vertexData[starIndex + 1].position.y = std::sinf(lat + klatEvery);
+			vertexData[starIndex + 1].position.z = std::cosf(lat + klatEvery) * std::sinf(lon);
+			vertexData[starIndex + 1].position.w = w;
+			vertexData[starIndex + 1].texcoord = { float(lonIndex) / float(kSubdivision), 1.0f - float(latIndex + 1) / float(kSubdivision) };
 
-			// Third vertex
-			vertexData[start + 2].position.x = cos(lat - klatEvery) * cos(lon);
-			vertexData[start + 2].position.y = sin(lat - klatEvery);
-			vertexData[start + 2].position.z = cos(lat - klatEvery) * sin(lon);
-			vertexData[start + 2].position.w = 1.0f;
-			vertexData[start + 2].texcoord = { u, v + 1.0f / static_cast<float>(kSubdivision) };
+			// c position
+			vertexData[starIndex + 2].position.x = std::cosf(lat) * std::cosf(lon + kLonEvery);
+			vertexData[starIndex + 2].position.y = std::sinf(lat);
+			vertexData[starIndex + 2].position.z = std::cosf(lat) * std::sinf(lon + kLonEvery);
+			vertexData[starIndex + 2].position.w = w;
+			vertexData[starIndex + 2].texcoord = { float(lonIndex + 1) / float(kSubdivision), 1.0f - float(latIndex) / float(kSubdivision) };
 
-			// Fourth vertex (next triangle)
-			vertexData[start + 3].position.x = cos(lat - klatEvery) * cos(lon);
-			vertexData[start + 3].position.y = sin(lat - klatEvery);
-			vertexData[start + 3].position.z = cos(lat - klatEvery) * sin(lon);
-			vertexData[start + 3].position.w = 1.0f;
-			vertexData[start + 3].texcoord = { u, v + 1.0f / static_cast<float>(kSubdivision) };
+			// d positon
+			vertexData[starIndex + 3].position.x = std::cosf(lat + klatEvery) * std::cosf(lon);
+			vertexData[starIndex + 3].position.y = std::sinf(lat + klatEvery);
+			vertexData[starIndex + 3].position.z = std::cosf(lat + klatEvery) * std::sinf(lon);
+			vertexData[starIndex + 3].position.w = w;
+			vertexData[starIndex + 3].texcoord = { float(lonIndex) / float(kSubdivision), 1.0f - float(latIndex + 1) / float(kSubdivision) };
 
-			// Fifth vertex
-			vertexData[start + 4].position.x = cos(lat) * cos(lon + kLonEvery);
-			vertexData[start + 4].position.y = sin(lat);
-			vertexData[start + 4].position.z = cos(lat) * sin(lon + kLonEvery);
-			vertexData[start + 4].position.w = 1.0f;
-			vertexData[start + 4].texcoord = { u + 1.0f / static_cast<float>(kSubdivision), v };
+			// b position　↑　頂点　
+			vertexData[starIndex + 4].position.x = std::cosf(lat + klatEvery) * std::cosf(lon + kLonEvery);
+			vertexData[starIndex + 4].position.y = std::sinf(lat + klatEvery);
+			vertexData[starIndex + 4].position.z = std::cosf(lat + klatEvery) * std::sinf(lon + kLonEvery);
+			vertexData[starIndex + 4].position.w = w;
+			vertexData[starIndex + 4].texcoord = { float(lonIndex + 1) / float(kSubdivision), 1.0f - float(latIndex + 1) / float(kSubdivision) };
 
-			// Sixth vertex
-			vertexData[start + 5].position.x = cos(lat - klatEvery) * cos(lon + kLonEvery);
-			vertexData[start + 5].position.y = sin(lat - klatEvery);
-			vertexData[start + 5].position.z = cos(lat - klatEvery) * sin(lon + kLonEvery);
-			vertexData[start + 5].position.w = 1.0f;
-			vertexData[start + 5].texcoord = { u + 1.0f / static_cast<float>(kSubdivision), v + 1.0f / static_cast<float>(kSubdivision) };
+			//c positopn 　↑　頂点　
+			vertexData[starIndex + 5].position.x = std::cosf(lat) * std::cosf(lon + kLonEvery);
+			vertexData[starIndex + 5].position.y = std::sinf(lat);
+			vertexData[starIndex + 5].position.z = std::cosf(lat) * std::sinf(lon + kLonEvery);
+			vertexData[starIndex + 5].position.w = w;
+			vertexData[starIndex + 5].texcoord = { float(lonIndex + 1) / float(kSubdivision), 1.0f - float(latIndex) / float(kSubdivision) };
+
 		}
 	}
 
@@ -1087,7 +1089,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// リソース解放
 	intermediateResources->Release();
-	intermediateResources2->Release();
 
 	materialResource->Release();
 	vertexResource->Release();
@@ -1124,7 +1125,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dxgiFactory->Release();
 
 	textureResource->Release();
-	textureResource2->Release();
 	vertexResourceSprite->Release();
 
 #ifdef _DEBUG
