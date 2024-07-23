@@ -51,20 +51,6 @@ ID3D12DescriptorHeap* CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTO
 }
 #pragma endregion
 
-D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
-{
-	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	handleCPU.ptr += (descriptorSize * index);
-	return handleCPU;
-}
-
-D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
-{
-	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	handleGPU.ptr += (descriptorSize * index);
-	return handleGPU;
-}
-
 
 #pragma region ツール
 //ウインドウプローシャ
@@ -360,6 +346,20 @@ ID3D12Resource* CreateDepthStencilTextureResouces(ID3D12Device* device, int32_t 
 
 
 #pragma endregion
+
+D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
+{
+	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	handleCPU.ptr += (descriptorSize * index);
+	return handleCPU;
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	handleGPU.ptr += (descriptorSize * index);
+	return handleGPU;
+}
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -769,11 +769,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma endregion
 
 
-	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	const uint32_t descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	const uint32_t descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-
-
 	TransformVector3 transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 	//Resource
@@ -816,60 +811,62 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 
+	float w = 1.0f;
 	const float kLonEvery = std::numbers::pi_v<float> * 2.0f / float(kSubdivision);
 	const float klatEvery = std::numbers::pi_v<float> / float(kSubdivision);
 
-	for (int latIndex = 0; latIndex <= kSubdivision; ++latIndex) {
-		float lat = std::numbers::pi_v<float> / 2.0f - klatEvery * latIndex;
+	// 緯度の方向に分割 -π/2 〜 π/2
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		float lat = -float(M_PI) / 2.0f + klatEvery * latIndex; // 現在の緯度
 
-		for (int lonIndex = 0; lonIndex <= kSubdivision; ++lonIndex) {
-			uint32_t start = (latIndex * (kSubdivision + 1) + lonIndex) * 6;
-			float lon = lonIndex * kLonEvery;
+		// 経度の方向に分割 0 〜 2π
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			float lon = lonIndex * kLonEvery; // 現在の経度
 
-			float u = static_cast<float>(lonIndex) / static_cast<float>(kSubdivision);
-			float v = 1.0f - static_cast<float>(latIndex) / static_cast<float>(kSubdivision);
+			uint32_t starIndex = (latIndex * kSubdivision + lonIndex) * 6;
 
-			// First vertex
-			vertexData[start].position.x = cos(lat) * cos(lon);
-			vertexData[start].position.y = sin(lat);
-			vertexData[start].position.z = cos(lat) * sin(lon);
-			vertexData[start].position.w = 1.0f;
-			vertexData[start].texcoord = { u, v };
+			//a position
+			vertexData[starIndex].position.x = std::cosf(lat) * std::cosf(lon);
+			vertexData[starIndex].position.y = std::sinf(lat);
+			vertexData[starIndex].position.z = std::cosf(lat) * std::sinf(lon);
+			vertexData[starIndex].position.w = w;
+			vertexData[starIndex].texcoord = { float(lonIndex) / float(kSubdivision), 1.0f - float(latIndex) / float(kSubdivision) };
 
-			// Second vertex
-			vertexData[start + 1].position.x = cos(lat) * cos(lon + kLonEvery);
-			vertexData[start + 1].position.y = sin(lat);
-			vertexData[start + 1].position.z = cos(lat) * sin(lon + kLonEvery);
-			vertexData[start + 1].position.w = 1.0f;
-			vertexData[start + 1].texcoord = { u + 1.0f / static_cast<float>(kSubdivision), v };
+			// b positopn
+			vertexData[starIndex + 1].position.x = std::cosf(lat + klatEvery) * std::cosf(lon);
+			vertexData[starIndex + 1].position.y = std::sinf(lat + klatEvery);
+			vertexData[starIndex + 1].position.z = std::cosf(lat + klatEvery) * std::sinf(lon);
+			vertexData[starIndex + 1].position.w = w;
+			vertexData[starIndex + 1].texcoord = { float(lonIndex) / float(kSubdivision), 1.0f - float(latIndex + 1) / float(kSubdivision) };
 
-			// Third vertex
-			vertexData[start + 2].position.x = cos(lat - klatEvery) * cos(lon);
-			vertexData[start + 2].position.y = sin(lat - klatEvery);
-			vertexData[start + 2].position.z = cos(lat - klatEvery) * sin(lon);
-			vertexData[start + 2].position.w = 1.0f;
-			vertexData[start + 2].texcoord = { u, v + 1.0f / static_cast<float>(kSubdivision) };
+			// c position
+			vertexData[starIndex + 2].position.x = std::cosf(lat) * std::cosf(lon + kLonEvery);
+			vertexData[starIndex + 2].position.y = std::sinf(lat);
+			vertexData[starIndex + 2].position.z = std::cosf(lat) * std::sinf(lon + kLonEvery);
+			vertexData[starIndex + 2].position.w = w;
+			vertexData[starIndex + 2].texcoord = { float(lonIndex + 1) / float(kSubdivision), 1.0f - float(latIndex) / float(kSubdivision) };
 
-			// Fourth vertex (next triangle)
-			vertexData[start + 3].position.x = cos(lat - klatEvery) * cos(lon);
-			vertexData[start + 3].position.y = sin(lat - klatEvery);
-			vertexData[start + 3].position.z = cos(lat - klatEvery) * sin(lon);
-			vertexData[start + 3].position.w = 1.0f;
-			vertexData[start + 3].texcoord = { u, v + 1.0f / static_cast<float>(kSubdivision) };
+			// d positon
+			vertexData[starIndex + 3].position.x = std::cosf(lat + klatEvery) * std::cosf(lon);
+			vertexData[starIndex + 3].position.y = std::sinf(lat + klatEvery);
+			vertexData[starIndex + 3].position.z = std::cosf(lat + klatEvery) * std::sinf(lon);
+			vertexData[starIndex + 3].position.w = w;
+			vertexData[starIndex + 3].texcoord = { float(lonIndex) / float(kSubdivision), 1.0f - float(latIndex + 1) / float(kSubdivision) };
 
-			// Fifth vertex
-			vertexData[start + 4].position.x = cos(lat) * cos(lon + kLonEvery);
-			vertexData[start + 4].position.y = sin(lat);
-			vertexData[start + 4].position.z = cos(lat) * sin(lon + kLonEvery);
-			vertexData[start + 4].position.w = 1.0f;
-			vertexData[start + 4].texcoord = { u + 1.0f / static_cast<float>(kSubdivision), v };
+			// b position　↑　頂点　
+			vertexData[starIndex + 4].position.x = std::cosf(lat + klatEvery) * std::cosf(lon + kLonEvery);
+			vertexData[starIndex + 4].position.y = std::sinf(lat + klatEvery);
+			vertexData[starIndex + 4].position.z = std::cosf(lat + klatEvery) * std::sinf(lon + kLonEvery);
+			vertexData[starIndex + 4].position.w = w;
+			vertexData[starIndex + 4].texcoord = { float(lonIndex + 1) / float(kSubdivision), 1.0f - float(latIndex + 1) / float(kSubdivision) };
 
-			// Sixth vertex
-			vertexData[start + 5].position.x = cos(lat - klatEvery) * cos(lon + kLonEvery);
-			vertexData[start + 5].position.y = sin(lat - klatEvery);
-			vertexData[start + 5].position.z = cos(lat - klatEvery) * sin(lon + kLonEvery);
-			vertexData[start + 5].position.w = 1.0f;
-			vertexData[start + 5].texcoord = { u + 1.0f / static_cast<float>(kSubdivision), v + 1.0f / static_cast<float>(kSubdivision) };
+			//c positopn 　↑　頂点　
+			vertexData[starIndex + 5].position.x = std::cosf(lat) * std::cosf(lon + kLonEvery);
+			vertexData[starIndex + 5].position.y = std::sinf(lat);
+			vertexData[starIndex + 5].position.z = std::cosf(lat) * std::sinf(lon + kLonEvery);
+			vertexData[starIndex + 5].position.w = w;
+			vertexData[starIndex + 5].texcoord = { float(lonIndex + 1) / float(kSubdivision), 1.0f - float(latIndex) / float(kSubdivision) };
+
 		}
 	}
 
@@ -922,16 +919,37 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	TransformVector3 cameraTransform { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 
+	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	const uint32_t descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	const uint32_t descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+	GetCPUDescriptorHandle(rtvDescriptorHeap, descriptorSizeRTV, 0);
+
+
+	DirectX::ScratchImage mipimage2 = LoadTexture("resources/monsterBall.png");
+	const DirectX::TexMetadata& metadata2 = mipimage2.GetMetadata();
+	ID3D12Resource* textureResource2 = CreateTextureResource(device, metadata2);
+	ID3D12Resource* intermediateResources2 = UploadTextureData(textureResource2, mipimage2, device, commandList);
+
+	//metaDataを基にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
+	srvDesc2.Format = metadata2.format;
+	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャ
+	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
+
+	//SRVを作成するDescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
+	//SRVの生成
+	device->CreateShaderResourceView(textureResource2, &srvDesc2, textureSrvHandleCPU2);
+
+
 
 	DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 	ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
 	ID3D12Resource* intermediateResources = UploadTextureData(textureResource, mipImages, device, commandList);
-
-	DirectX::ScratchImage mipimage2 = LoadTexture("resources/monsterBall.png");
-	const DirectX::TexMetadata& metadata2 = mipimage2.GetMetadata();
-	ID3D12Resource* textureResource2 = CreateTextureResource(device, metadata2);
-	UploadTextureData(textureResource, mipimage2, device, commandList);
 
 	//metaDataを基にSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
@@ -948,21 +966,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//SRVの生成
 	device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
 
-	//metaDataを基にSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
-	srvDesc.Format = metadata2.format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャ
-	srvDesc.Texture2D.MipLevels = UINT(metadata2.mipLevels);
-	//SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
-	////戦闘はImGuiが使っているのでその次を使う
-	//textureSrvHandleCPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	//textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	//SRVの生成
-	device->CreateShaderResourceView(textureResource2, &srvDesc2, textureSrvHandleCPU2);
-
 
 	//Material用のResourceを作る
 	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
@@ -973,6 +976,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	////こここで色かえられるよ
 	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	////こここで色かえられるよ
+
+	bool useMonsterBall = true;
 
 	MSG msg{};
 
@@ -1021,6 +1026,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::SliderFloat3("Position", &transform.translate.x, -5.0f, 5.0f);
 			ImGui::SliderFloat3("Rotation", &transform.rotate.x, -180.0f, 180.0f);
 			ImGui::SliderFloat3("Scale", &transform.scale.x, 0.1f, 2.0f);
+			ImGui::SliderFloat("MonsterBallsc", &w, 0.1f, 2.0f);
+			ImGui::Checkbox("useMonsterball", &useMonsterBall);
 			ImGui::End();
 
 			ImGui::Render();
@@ -1057,10 +1064,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ID3D12DescriptorHeap* descriptorHepes[] = { srvDescriptorHeap };
 			commandList->SetDescriptorHeaps(1, descriptorHepes);
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
-			
+
 			//コマンド
 			commandList->RSSetViewports(1, &viewport);
 			commandList->RSSetScissorRects(1, &scissorRect);
+
 
 			commandList->SetGraphicsRootSignature(rootSignature);
 			commandList->SetPipelineState(graphicsPipelineState);
@@ -1071,8 +1079,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//CBVを設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
-			//commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU2);
+			
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			//commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU2);
+
+			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 
 			//描画
 			commandList->DrawInstanced(kSubdivision * kSubdivision * 6, 1, 0, 0);
@@ -1129,8 +1140,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// リソース解放
 	intermediateResources->Release();
+	intermediateResources2->Release();
+
 	materialResource->Release();
 	vertexResource->Release();
+	depthStencilResouce->Release();
+	depthStencilResource->Release();
 	graphicsPipelineState->Release();
 	signatureBlob->Release();
 	rootSignature->Release();
@@ -1161,12 +1176,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	useadapter->Release();
 	dxgiFactory->Release();
 
-
-	//vertexResource->Release();
-
 	textureResource->Release();
-
-	depthStencilResouce->Release();
+	textureResource2->Release();
 	vertexResourceSprite->Release();
 
 #ifdef _DEBUG
