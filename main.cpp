@@ -1087,8 +1087,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// リソース解放
 	intermediateResources->Release();
+	intermediateResources2->Release();
+
 	materialResource->Release();
 	vertexResource->Release();
+	depthStencilResouce->Release();
+	depthStencilResource->Release();
 	graphicsPipelineState->Release();
 	signatureBlob->Release();
 	rootSignature->Release();
@@ -1119,12 +1123,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	useadapter->Release();
 	dxgiFactory->Release();
 
-
-	//vertexResource->Release();
-
 	textureResource->Release();
-
-	depthStencilResouce->Release();
+	textureResource2->Release();
 	vertexResourceSprite->Release();
 
 #ifdef _DEBUG
