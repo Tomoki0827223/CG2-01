@@ -1224,26 +1224,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// リソース解放
 	intermediateResources->Release();
-	wvpResource->Release();
-	vertexResource->Release();
+	intermediateResources2->Release();
 
+	materialResource->Release();
+	vertexResource->Release();
+	depthStencilResouce->Release();
+	depthStencilResource->Release();
 	graphicsPipelineState->Release();
 	signatureBlob->Release();
+	rootSignature->Release();
+	pixelShaderBlob->Release();
+	vertexShaderBlob->Release();
+
 	if (errorBlob) {
 		errorBlob->Release();
 	}
 
-	rootSignature->Release();
-	pixelShaderBlob->Release();
-	vertexShaderBlob->Release();
-	materialResource->Release();
-
+	dsvDescriptorHeap->Release();
 	srvDescriptorHeap->Release();
-
+	transformationMatrixResourceSprite->Release();
+	directionalLightResorce->Release();
+	materialResourceSprite->Release();
+	wvpResource->Release();
 
 	CloseHandle(fenceEvent);
 	fence->Release();
 	rtvDescriptorHeap->Release();
+
 	swapChainResource[0]->Release();
 	swapChainResource[1]->Release();
 
@@ -1251,12 +1258,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	commandList->Release();
 	commandAllocator->Release();
 	commandQueue->Release();
-
 	device->Release();
 	useadapter->Release();
 	dxgiFactory->Release();
 
-	directionalLightResorce->Release();
+	textureResource->Release();
+	textureResource2->Release();
+	vertexResourceSprite->Release();
 
 #ifdef _DEBUG
 	debugController->Release();
