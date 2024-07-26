@@ -67,7 +67,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	case WM_DESTROY:
 
 		PostQuitMessage(0);
-		
+
 		return 0;
 	}
 
@@ -675,7 +675,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 	rootParameters[1].Descriptor.ShaderRegister = 0;
-	
+
 	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;
@@ -684,7 +684,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[3].Descriptor.ShaderRegister = 1;
-	
+
 	descriptionRootSignature.pParameters = rootParameters;
 	descriptionRootSignature.NumParameters = _countof(rootParameters);
 
@@ -726,12 +726,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	inputElementDescs[0].SemanticIndex = 0;
 	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	
+
 	inputElementDescs[1].SemanticName = "TEXCOORD";
 	inputElementDescs[1].SemanticIndex = 0;
 	inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
 	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	
+
 	inputElementDescs[2].SemanticName = "NORMAL";
 	inputElementDescs[2].SemanticIndex = 0;
 	inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
@@ -805,7 +805,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	TransformVector3 transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 	//Resourcef
-	const uint32_t kSubdivision = 16;
+	const uint32_t kSubdivision = 36;
 
 	//VertexResourceを生成
 	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * kSubdivision * kSubdivision * 6);
@@ -815,7 +815,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//VertexBufferResourceを生成
 	ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
-	
+
+	ID3D12Resource* indexResourceSprite = CreateBufferResource(device, sizeof(uint32_t) * 6);
+
+	D3D12_INDEX_BUFFER_VIEW indexBufferViewSprite{};
+
+	indexBufferViewSprite.BufferLocation = indexResourceSprite->GetGPUVirtualAddress();
+	indexBufferViewSprite.SizeInBytes = sizeof(uint32_t) * 6;
+	indexBufferViewSprite.Format = DXGI_FORMAT_R32_UINT;
+
+	uint32_t* indexDataSprite = nullptr;
+	indexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSprite));
+	indexDataSprite[0] = 0;
+	indexDataSprite[1] = 1;
+	indexDataSprite[2] = 2;
+	indexDataSprite[3] = 1;
+	indexDataSprite[4] = 3;
+	indexDataSprite[5] = 2;
+
 	//TransformationMatrixResource
 	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(TransformationMatrix));
 	TransformationMatrix* transformationMatrixDataSprite = nullptr;
@@ -847,7 +864,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 
 	float w = 1.0f;
-	const float kLonEvery = std::numbers::pi_v<float> * 2.0f / float(kSubdivision);
+	const float kLonEvery = std::numbers::pi_v<float> *2.0f / float(kSubdivision);
 	const float klatEvery = std::numbers::pi_v<float> / float(kSubdivision);
 
 	// 緯度の方向に分割 -π/2 〜 π/2
@@ -936,25 +953,40 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//書き込むためのアドレスを取得
 	vertexResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSprite));
 	//一個目
-	vertexDataSprite[0].position = { 0.0f,360.0f,0.0f,1.0f };//左した
-	vertexDataSprite[0].texcoord = { 0.0f,1.0f };
-	vertexDataSprite[0].nomal = { 0.0f,0.0f,-1.0f };
-	vertexDataSprite[1].position = { 0.0f,0.0f,0.0f,1.0f };//左上
-	vertexDataSprite[1].texcoord = { 0.0f,0.0f };
-	vertexDataSprite[1].nomal = { 0.0f,0.0f,-1.0f };
-	vertexDataSprite[2].position = { 640.0f,360.0f,0.0f,1.0f };//右下
-	vertexDataSprite[2].texcoord = { 1.0f,1.0f };
-	vertexDataSprite[2].nomal = { 0.0f,0.0f,-1.0f };
+	//vertexDataSprite[0].position = { 0.0f,360.0f,0.0f,1.0f };//左した
+	//vertexDataSprite[0].texcoord = { 0.0f,1.0f };
+	//vertexDataSprite[0].nomal = { 0.0f,0.0f,-1.0f };
+	//vertexDataSprite[1].position = { 0.0f,0.0f,0.0f,1.0f };//左上
+	//vertexDataSprite[1].texcoord = { 0.0f,0.0f };
+	//vertexDataSprite[1].nomal = { 0.0f,0.0f,-1.0f };
+	//vertexDataSprite[2].position = { 640.0f,360.0f,0.0f,1.0f };//右下
+	//vertexDataSprite[2].texcoord = { 1.0f,1.0f };
+	//vertexDataSprite[2].nomal = { 0.0f,0.0f,-1.0f };
 	//二個目
-	vertexDataSprite[3].position = { 0.0f,0.0f,0.0f,1.0f };//左した
-	vertexDataSprite[3].texcoord = { 0.0f,0.0f };
-	vertexDataSprite[3].nomal = { 0.0f,0.0f,-1.0f };
-	vertexDataSprite[4].position = { 640.0f,0.0f,0.0f,1.0f };//右上
-	vertexDataSprite[4].texcoord = { 1.0f,0.0f };
-	vertexDataSprite[4].nomal = { 0.0f,0.0f,-1.0f };
-	vertexDataSprite[5].position = { 640.0f,360.0f,0.0f,1.0f };//右下
-	vertexDataSprite[5].texcoord = { 1.0f,1.0f };
-	vertexDataSprite[5].nomal = { 0.0f,0.0f,-1.0f };
+	//vertexDataSprite[3].position = { 0.0f,0.0f,0.0f,1.0f };//左した
+	//vertexDataSprite[3].texcoord = { 0.0f,0.0f };
+	//vertexDataSprite[3].nomal = { 0.0f,0.0f,-1.0f };
+	//vertexDataSprite[3].position = { 640.0f,0.0f,0.0f,1.0f };//右上
+	//vertexDataSprite[3].texcoord = { 1.0f,0.0f };
+	//vertexDataSprite[3].nomal = { 0.0f,0.0f,-1.0f };
+	//vertexDataSprite[5].position = { 640.0f,360.0f,0.0f,1.0f };//右下
+	//vertexDataSprite[5].texcoord = { 1.0f,1.0f };
+	//vertexDataSprite[5].nomal = { 0.0f,0.0f,-1.0f };
+
+	// 1枚目の三角形
+	vertexDataSprite[0].position = { 0.0f, 360.0f, 0.0f, 1.0f };// 左下
+	vertexDataSprite[0].texcoord = { 0.0f, 1.0f };
+	vertexDataSprite[0].nomal = { 0.0f, 0.0f, -1.0f };
+	vertexDataSprite[1].position = { 0.0f, 0.0f, 0.0f, 1.0f };// 左上
+	vertexDataSprite[1].texcoord = { 0.0f,0.0f };
+	vertexDataSprite[1].nomal = { 0.0f, 0.0f, -1.0f };
+	vertexDataSprite[2].position = { 640.0f, 360.0f, 0.0f, 1.0f };// 右下
+	vertexDataSprite[2].texcoord = { 1.0f, 1.0f };
+	vertexDataSprite[2].nomal = { 0.0f, 0.0f, -1.0f };
+	// 2枚目の三角形
+	vertexDataSprite[3].position = { 640.0f, 0.0f, 0.0f, 1.0f };// 右上
+	vertexDataSprite[3].texcoord = { 1.0f, 0.0f };
+	vertexDataSprite[3].nomal = { 0.0f, 0.0f, -1.0f };
 
 	D3D12_VIEWPORT viewport{};
 
@@ -974,7 +1006,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	TransformVector3 transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-	TransformVector3 cameraTransform { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
+	TransformVector3 cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 
 	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -1039,7 +1071,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
 	materialDataSprite->color = { 1.0f,1.0f,1.0f,1.0f };
 	materialDataSprite->endleLighting = false;
-	
+
 	//ライティング
 	ID3D12Resource* directionalLightResorce = CreateBufferResource(device, sizeof(DirectionaLight));
 	DirectionaLight* directionalLightData = nullptr;
@@ -1167,6 +1199,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// Spriteの描画。変更が必要なものだけ変更する
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite); // VBVを設定//
+
+			commandList->IASetIndexBuffer(&indexBufferViewSprite);
+
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 			// TransformationMatrixCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
@@ -1174,7 +1209,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResorce->GetGPUVirtualAddress());
 			// 描画！（DrawCall/ドローコール）
-			commandList->DrawInstanced(6, 1, 0, 0);
+			//commandList->DrawInstanced(6, 1, 0, 0);
+
+			//描画! (DrawCall/ドローコール) 6個のインデックスを使用し1つのインスタンスを描画。その他は当面で良い
+			commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			//実際のcommandListのImGuiの描画コマンドを積む
@@ -1265,6 +1303,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	textureResource->Release();
 	textureResource2->Release();
 	vertexResourceSprite->Release();
+	indexResourceSprite->Release();
 
 #ifdef _DEBUG
 	debugController->Release();
