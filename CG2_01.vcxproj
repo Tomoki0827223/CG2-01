@@ -58,6 +58,7 @@
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Vector4.h" />
     <ClInclude Include="Vector2.h" />
+    <ClInclude Include="Matrix3x3.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
