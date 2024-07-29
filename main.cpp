@@ -17,7 +17,6 @@
 #include "Vector3.h"
 #include "Vector2.h"
 #include "Matrix4x4.h"
-#include "Matrix3x3.h"
 #include "affine.h"
 
 #define _USE_MATH_DEFINES
@@ -238,7 +237,6 @@ struct Material
 {
 	Vector4 color;
 	int32_t endleLighting;
-	Matrix3x3 uvTransform;
 };
 
 struct TransformationMatrix
