@@ -109,8 +109,11 @@ struct D3DResourceLeakChecker
 	~D3DResourceLeakChecker()
 	{
 		Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
-		if (SUCCEEDED(DXGIGetDebugInterface1(0,IID_PPV_ARGS(&debug)))){
-			debug.ReportLiveObjects()
+		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
+			debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
+			debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
+			debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
+			debug->Release();
 		}
 	}
 };
@@ -255,7 +258,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(Microsoft::WRL::ComP
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	ID3D12Resource* resource = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
 	HRESULT hr = device->CreateCommittedResource(
 		&uploadHeapProperties,
 		D3D12_HEAP_FLAG_NONE,
@@ -534,9 +537,12 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(Microsoft::WRL::ComPtr<ID3D12
 }
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+	D3DResourceLeakChecker LeakCheak;
+
+	
+
 
 	CoInitializeEx(0, COINIT_MULTITHREADED);
-	CoUninitialize();
 
 #pragma region Windowの生成
 
@@ -849,8 +855,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
 
 
-	ID3DBlob* signatureBlob = nullptr;
-	ID3DBlob* errorBlob = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
 	hr = D3D12SerializeRootSignature(&descriptionRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
 
 	if (FAILED(hr))
@@ -956,7 +962,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialData->endleLighting = true;
 	materialData->uvTransform = MakeIdentity4x4();
 
-	bool useMonsterBall = true;
+	bool useMonsterBall = false;
 
 	TransformVector3 transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
@@ -967,7 +973,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * kSubdivision * kSubdivision * 6);
 
 	//モデル読み込み
-	ModelData modelData = LoaObjFile("resources", "plane.obj");
+	ModelData modelData = LoaObjFile("resources", "Bunny.obj");
+	//ModelData modelData = LoaObjFile("resources", "plane.obj");
+	
 	//頂点リソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
 	//頂点バッファビューを作成する
@@ -1246,7 +1254,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			//ゲーム処理
 
-			transform.rotate.y += 0.03f;
+			transform.rotate.y += 0.0f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
@@ -1287,10 +1295,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::SliderFloat3("Rotation", &transform.rotate.x, -180.0f, 180.0f);
 			ImGui::SliderFloat3("Scale", &transform.scale.x, 0.1f, 2.0f);
 			//ImGui::SliderFloat("MonsterBallsc", &w, 0.1f, 2.0f);
-			ImGui::Checkbox("useMonsterball", &useMonsterBall);
+			//ImGui::Checkbox("useMonsterball", &useMonsterBall);
+			//transformSprite.scale, transformSprite.rotate, transformSprite.translate
+			ImGui::DragFloat3("UVTransScale", &transformSprite.scale.x, 0.1f);
+			ImGui::DragFloat3("UVTransRotate", &transformSprite.rotate.x, 0.1f);
+			ImGui::DragFloat3("UVTransTranslate", &transformSprite.translate.x);
+
 			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
 			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
 			ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+
+			//directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
+			//directionalLightData->direction = { 0.0f,-1.0f,0.0f };
+			//directionalLightData->intensity = 1.0f;
+
 			ImGui::End();
 
 			ImGui::Render();
@@ -1399,7 +1417,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 	}
 
-	//リソース解放
+//	//リソース解放
 //	intermediateResources->Release();
 //	intermediateResources2->Release();
 //
@@ -1448,5 +1466,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	CloseHandle(fenceEvent);
 	CloseWindow(hwnd);
 
+	CoUninitialize();
 	return 0;
 }
