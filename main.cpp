@@ -104,6 +104,17 @@ struct ModelData {
 	MaterialData material;
 };
 
+struct D3DResourceLeakChecker
+{
+	~D3DResourceLeakChecker()
+	{
+		Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
+		if (SUCCEEDED(DXGIGetDebugInterface1(0,IID_PPV_ARGS(&debug)))){
+			debug.ReportLiveObjects()
+		}
+	}
+};
+
 #pragma endregion
 
 #pragma region ツール
@@ -1388,23 +1399,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 	}
 
-	// リソース解放
-	//intermediateResources->Release();
-	//intermediateResources2->Release();
-
-	//materialResource->Release();
-	//vertexResource->Release();
-	//depthStencilResouce->Release();
-	//depthStencilResource->Release();
-	//graphicsPipelineState->Release();
-
-	//dsvDescriptorHeap->Release();
-	//srvDescriptorHeap->Release();
-	//transformationMatrixResourceSprite->Release();
-	//directionalLightResorce->Release();
-	//materialResourceSprite->Release();
-	//wvpResource->Release();
-
+	//リソース解放
+//	intermediateResources->Release();
+//	intermediateResources2->Release();
+//
+//	materialResource->Release();
+//	vertexResource->Release();
+//	depthStencilResouce->Release();
+//	depthStencilResource->Release();
+//	graphicsPipelineState->Release();
+//
+//	dsvDescriptorHeap->Release();
+//	srvDescriptorHeap->Release();
+//	transformationMatrixResourceSprite->Release();
+//	directionalLightResorce->Release();
+//	materialResourceSprite->Release();
+//	wvpResource->Release();
+//
 //	fence->Release();
 //	rtvDescriptorHeap->Release();
 //
@@ -1427,14 +1438,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 //#ifdef _DEBUG
 //	debugController->Release();
 //#endif
-
-
-	Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
-	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-		debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-	}
 
 
 	ImGui_ImplDX12_Shutdown();
