@@ -1358,6 +1358,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootSignature(rootSignature.Get());
 			commandList->SetPipelineState(graphicsPipelineState.Get());
 
+
 			//Sphere
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			//形状を設定。PSOに設定しているものとはまた別、同じものを設定すると考えておけば良い
