@@ -43,18 +43,8 @@ bool Input::PushKey(BYTE keyNumber)
 
 bool Input::TriggerKey(BYTE keyNumber)
 {
-	if (key[keyNumber] && !keyPre[keyNumber])
+	if (keyPre[keyNumber] == 0 && key[keyNumber])
 	{
-		// スペースキー
-		if (keyNumber == DIK_SPACE)
-		{
-			OutputDebugStringA("Space key pressed!\n");
-		}
-		// Wキー
-		else if (keyNumber == DIK_W)
-		{
-			OutputDebugStringA("W key pressed!\n");
-		}
 
 		return true;
 	}

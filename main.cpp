@@ -597,7 +597,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Input* input = nullptr;
 	input = new Input();
 	input->Initialize(wc.hInstance, hwnd);
-	input->Update();
 
 	//ウインドウを表示する
 	ShowWindow(hwnd, SW_SHOW);
@@ -1173,6 +1172,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DispatchMessage(&msg);
 		}
 		else {
+
+			//GE3
+			input->Update();
 
 			//ゲーム処理
 
