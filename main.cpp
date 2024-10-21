@@ -593,9 +593,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		nullptr
 	);
 
+	//GE3
 	Input* input = nullptr;
 	input = new Input();
 	input->Initialize(wc.hInstance, hwnd);
+	input->Update();
 
 	//ウインドウを表示する
 	ShowWindow(hwnd, SW_SHOW);
@@ -980,7 +982,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//モデル読み込み
 	//ModelData modelData = LoaObjFile("resources", "Bunny.obj");
+
+
 	ModelData modelData = LoaObjFile("resources", "plane.obj");
+
+	//ModelData modelData = LoaObjFile("resources", "plane.obj");
 	
 	//頂点リソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
@@ -1149,96 +1155,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	MSG msg{};
 
-	//////vertexResource頂点バッファーを作成する
-//D3D12_VERTEX_BUFFER_VIEW vertexBufferView{ };
-////リソースの先頭のアドレスから使う
-//vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-////使用するリソースのサイズは頂点分のサイズ
-//vertexBufferView.SizeInBytes = sizeof(VertexData) * kSubdivision * kSubdivision * 6;
-////1頂点当たりのサイズ
-//vertexBufferView.StrideInBytes = sizeof(VertexData);
-////頂点リソースにデータを書き込む
-//VertexData* vertexData = nullptr;
-////書き込むためのアドレスを取得
-//vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-
-//float w = 1.0f;
-//const float kLonEvery = std::numbers::pi_v<float> *2.0f / float(kSubdivision);
-//const float klatEvery = std::numbers::pi_v<float> / float(kSubdivision);
-
-//// 緯度の方向に分割 -π/2 〜 π/2
-//for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-//	float lat = -float(M_PI) / 2.0f + klatEvery * latIndex; // 現在の緯度
-
-//	// 経度の方向に分割 0 〜 2π
-//	for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-//		float lon = lonIndex * kLonEvery; // 現在の経度
-
-//		uint32_t starIndex = (latIndex * kSubdivision + lonIndex) * 6;
-
-//		//a position
-//		vertexData[starIndex].position.x = std::cosf(lat) * std::cosf(lon);
-//		vertexData[starIndex].position.y = std::sinf(lat);
-//		vertexData[starIndex].position.z = std::cosf(lat) * std::sinf(lon);
-//		vertexData[starIndex].position.w = w;
-//		vertexData[starIndex].texcoord = { float(lonIndex) / float(kSubdivision), 1.0f - float(latIndex) / float(kSubdivision) };
-//		vertexData[starIndex].nomal.x = vertexData[starIndex].position.x;
-//		vertexData[starIndex].nomal.y = vertexData[starIndex].position.y;
-//		vertexData[starIndex].nomal.z = vertexData[starIndex].position.z;
-
-//		// b positopn
-//		vertexData[starIndex + 1].position.x = std::cosf(lat + klatEvery) * std::cosf(lon);
-//		vertexData[starIndex + 1].position.y = std::sinf(lat + klatEvery);
-//		vertexData[starIndex + 1].position.z = std::cosf(lat + klatEvery) * std::sinf(lon);
-//		vertexData[starIndex + 1].position.w = w;
-//		vertexData[starIndex + 1].texcoord = { float(lonIndex) / float(kSubdivision), 1.0f - float(latIndex + 1) / float(kSubdivision) };
-//		vertexData[starIndex + 1].nomal.x = vertexData[starIndex + 1].position.x;
-//		vertexData[starIndex + 1].nomal.y = vertexData[starIndex + 1].position.y;
-//		vertexData[starIndex + 1].nomal.z = vertexData[starIndex + 1].position.z;
-
-//		// c position
-//		vertexData[starIndex + 2].position.x = std::cosf(lat) * std::cosf(lon + kLonEvery);
-//		vertexData[starIndex + 2].position.y = std::sinf(lat);
-//		vertexData[starIndex + 2].position.z = std::cosf(lat) * std::sinf(lon + kLonEvery);
-//		vertexData[starIndex + 2].position.w = w;
-//		vertexData[starIndex + 2].texcoord = { float(lonIndex + 1) / float(kSubdivision), 1.0f - float(latIndex) / float(kSubdivision) };
-//		vertexData[starIndex + 2].nomal.x = vertexData[starIndex + 2].position.x;
-//		vertexData[starIndex + 2].nomal.y = vertexData[starIndex + 2].position.y;
-//		vertexData[starIndex + 2].nomal.z = vertexData[starIndex + 2].position.z;
-
-//		// d positon
-//		vertexData[starIndex + 3].position.x = std::cosf(lat + klatEvery) * std::cosf(lon);
-//		vertexData[starIndex + 3].position.y = std::sinf(lat + klatEvery);
-//		vertexData[starIndex + 3].position.z = std::cosf(lat + klatEvery) * std::sinf(lon);
-//		vertexData[starIndex + 3].position.w = w;
-//		vertexData[starIndex + 3].texcoord = { float(lonIndex) / float(kSubdivision), 1.0f - float(latIndex + 1) / float(kSubdivision) };
-//		vertexData[starIndex + 3].nomal.x = vertexData[starIndex + 3].position.x;
-//		vertexData[starIndex + 3].nomal.y = vertexData[starIndex + 3].position.y;
-//		vertexData[starIndex + 3].nomal.z = vertexData[starIndex + 3].position.z;
-
-//		// b position　↑　頂点　
-//		vertexData[starIndex + 4].position.x = std::cosf(lat + klatEvery) * std::cosf(lon + kLonEvery);
-//		vertexData[starIndex + 4].position.y = std::sinf(lat + klatEvery);
-//		vertexData[starIndex + 4].position.z = std::cosf(lat + klatEvery) * std::sinf(lon + kLonEvery);
-//		vertexData[starIndex + 4].position.w = w;
-//		vertexData[starIndex + 4].texcoord = { float(lonIndex + 1) / float(kSubdivision), 1.0f - float(latIndex + 1) / float(kSubdivision) };
-//		vertexData[starIndex + 4].nomal.x = vertexData[starIndex + 4].position.x;
-//		vertexData[starIndex + 4].nomal.y = vertexData[starIndex + 4].position.y;
-//		vertexData[starIndex + 4].nomal.z = vertexData[starIndex + 4].position.z;
-
-//		//c positopn 　↑　頂点　
-//		vertexData[starIndex + 5].position.x = std::cosf(lat) * std::cosf(lon + kLonEvery);
-//		vertexData[starIndex + 5].position.y = std::sinf(lat);
-//		vertexData[starIndex + 5].position.z = std::cosf(lat) * std::sinf(lon + kLonEvery);
-//		vertexData[starIndex + 5].position.w = w;
-//		vertexData[starIndex + 5].texcoord = { float(lonIndex + 1) / float(kSubdivision), 1.0f - float(latIndex) / float(kSubdivision) };
-//		vertexData[starIndex + 5].nomal.x = vertexData[starIndex + 5].position.x;
-//		vertexData[starIndex + 5].nomal.y = vertexData[starIndex + 5].position.y;
-//		vertexData[starIndex + 5].nomal.z = vertexData[starIndex + 5].position.z;
-
-//	}
-//}
-
 	//ImGuiの初期化
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -1278,12 +1194,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			transformationMatrixDataSprite->world = worldMatrixSprite;
 			transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
 
+			// ここで、キー入力の処理を行う
+			if (input->TriggerKey(DIK_SPACE))
+			{
+				// スペースキーが押されたときの処理
+				OutputDebugStringA("SpaceKey\n");
+			}
+
 			//スプライト
 			Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
 			uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
 			uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
 			materialDataSprite->uvTransform = uvTransformMatrix;
-
 
 			//これから書き込むバッファのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -1303,13 +1225,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//ImGui::SliderFloat("MonsterBallsc", &w, 0.1f, 2.0f);
 			//ImGui::Checkbox("useMonsterball", &useMonsterBall);
 			//transformSprite.scale, transformSprite.rotate, transformSprite.translate
-			ImGui::DragFloat3("UVTransScale", &transformSprite.scale.x, 0.1f);
-			ImGui::DragFloat3("UVTransRotate", &transformSprite.rotate.x, 0.1f);
-			ImGui::DragFloat3("UVTransTranslate", &transformSprite.translate.x);
+			//ImGui::DragFloat3("UVTransScale", &transformSprite.scale.x, 0.1f);
+			//ImGui::DragFloat3("UVTransRotate", &transformSprite.rotate.x, 0.1f);
+			//ImGui::DragFloat3("UVTransTranslate", &transformSprite.translate.x);
 
-			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-			ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+			//ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+			//ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+			//ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
 
 			//directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
 			//directionalLightData->direction = { 0.0f,-1.0f,0.0f };
