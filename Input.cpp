@@ -1,4 +1,6 @@
 #include "Input.h"
+//#include <dinput.h>
+//#define DIRECTINPUT_VERSION 0x0800
 
 void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
 {
