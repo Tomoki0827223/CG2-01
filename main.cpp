@@ -593,6 +593,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		nullptr
 	);
 
+
 	//GE3
 	Input* input = nullptr;
 	input = new Input();
