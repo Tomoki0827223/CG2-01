@@ -1,3 +1,8 @@
+#pragma comment(lib, "dxcompiler.lib")
+#pragma comment(lib,"dxguid.lib")
+#pragma comment(lib,"d3d12.lib")
+#pragma comment(lib,"dxgi.lib")
+
 #include <Windows.h>
 #include <cstdint>
 #include <string>
@@ -32,11 +37,6 @@
 #include "externals/imgui/imgui_impl_win32.h"
 #include "externals/DirectXTex/d3dx12.h"
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wparm, LPARAM lparam);
-
-#pragma comment(lib, "dxcompiler.lib")
-#pragma comment(lib,"dxguid.lib")
-#pragma comment(lib,"d3d12.lib")
-#pragma comment(lib,"dxgi.lib")
 
 #pragma region 単位行列とTransform
 // 単位行列の作成
