@@ -559,6 +559,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ShowWindow(hwnd, SW_SHOW);
 
 
+
 #pragma endregion
 
 #ifdef _DEBUG
