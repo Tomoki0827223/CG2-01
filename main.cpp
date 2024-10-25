@@ -548,56 +548,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	winApp_ = new WinApp();
 	winApp_->Initialize();
 
-	CoInitializeEx(0, COINIT_MULTITHREADED);
-
 #pragma region Windowの生成
-
-	WNDCLASS wc{};
-
-	wc.lpfnWndProc = WindowProc;
-
-	wc.lpszClassName = L"CG2WindowClass";
-
-	wc.hInstance = GetModuleHandle(nullptr);
-
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-
-	RegisterClass(&wc);
-
-	//クライアントの領域サイズ
-	const int32_t kClientwidth = 1280;
-	const int32_t kClientHeight = 720;
-
-	RECT wrc = { 0,0,kClientwidth,kClientHeight };
-
-	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
-
-	HWND hwnd = CreateWindow
-	(
-		//利用するクラス名
-		wc.lpszClassName,
-		//タイトルバーの文字（何でもいい）
-		L"CG2",
-		//よく見るウインドウスタイル
-		WS_OVERLAPPEDWINDOW,
-		//表示X座標（Windowsに任せる）
-		CW_USEDEFAULT,
-		//表示Y座標（WindowsOSにまかせる）
-		CW_USEDEFAULT,
-		//ウインドウ横幅
-		wrc.right - wrc.left,
-		//ウインドウ立幅
-		wrc.bottom - wrc.top,
-		//親ウインドウハンドル
-		nullptr,
-		//メニューハンドル
-		nullptr,
-		//インスタンスハンドル
-		wc.hInstance,
-		//オプションハンドル
-		nullptr
-	);
-
 
 	//GE3
 	Input* input = nullptr;
@@ -743,8 +694,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//SwapChain
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain = nullptr;
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-	swapChainDesc.Width = kClientwidth;//画面の幅
-	swapChainDesc.Height = kClientHeight;//画面の高さ
+	swapChainDesc.Width = WinApp::kClientWidth;
+	swapChainDesc.Height = WinApp::kClientHeight;//画面の高さ
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;//色の形式
 	swapChainDesc.SampleDesc.Count = 1;//マルチサンプルしない
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;//描画のターゲットとして利用する

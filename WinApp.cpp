@@ -33,8 +33,8 @@ void WinApp::Initialize()
 
     (!RegisterClass(&wc));
 
-    const int32_t kClientWidth = 1280;
-    const int32_t kClientHeight = 720;
+    //const int32_t kClientWidth = 1280;
+    //const int32_t kClientHeight = 720;
 
     RECT wrc = { 0, 0, kClientWidth, kClientHeight };
     AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, FALSE);

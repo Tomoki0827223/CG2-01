@@ -13,5 +13,9 @@ public:
 
 	void Initialize();
 	void Update();
+
+
+	static const int32_t kClientWidth = 1280;
+	static const int32_t kClientHeight = 720;
 };
 
