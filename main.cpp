@@ -26,6 +26,7 @@
 #include "Vector2.h"
 #include "Matrix4x4.h"
 #include "affine.h"
+#include "WinApp.h"
 
 #include "Input.h"
 
@@ -543,6 +544,9 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(Microsoft::WRL::ComPtr<ID3D12
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3DResourceLeakChecker LeakCheak;
 
+	WinApp* winApp_ = nullptr;
+	winApp_ = new WinApp();
+	winApp_->Initialize();
 
 	CoInitializeEx(0, COINIT_MULTITHREADED);
 
@@ -1391,6 +1395,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 //#endif
 
 	delete input;
+	delete winApp_;
 
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
