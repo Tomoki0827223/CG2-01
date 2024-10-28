@@ -25,7 +25,7 @@ void WinApp::Initialize()
 {
     HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
-    WNDCLASS wc{};
+    //WNDCLASS wc{};
     wc.lpfnWndProc = WindowProc;
     wc.lpszClassName = L"CG2WindowClass";
     wc.hInstance = GetModuleHandle(nullptr);
@@ -40,7 +40,7 @@ void WinApp::Initialize()
     AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, FALSE);
 
 
-    HWND hwnd = CreateWindow(
+    hwnd = CreateWindow(
         wc.lpszClassName,
         L"CG2",
         WS_OVERLAPPEDWINDOW,
