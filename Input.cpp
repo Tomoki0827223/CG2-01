@@ -1,3 +1,6 @@
+#pragma comment(lib,"dxguid.lib")
+#pragma comment(lib,"dinput8.lib")
+
 #include "Input.h"
 
 void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
