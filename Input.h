@@ -3,8 +3,8 @@
 #include <Windows.h>
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
-
 #include <cassert>
+#include "WinApp.h"
 #include <wrl.h>
 
 class Input
@@ -13,7 +13,7 @@ public:
 
 	template <class T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	void Initialize(HINSTANCE hInstance, HWND hwnd);
+	void Initialize(WinApp* winApp);
 
 	void Update();
 
@@ -32,6 +32,6 @@ private:
 
 	HRESULT result;
 
-
+	WinApp* winApp = nullptr;
 };
 

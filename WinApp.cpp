@@ -56,3 +56,9 @@ void WinApp::Update()
 {
     // Your update logic here
 }
+
+void WinApp::Finalize()
+{
+    CloseWindow(hwnd);
+    CoUninitialize();
+}

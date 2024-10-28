@@ -5,11 +5,13 @@
 //#include <dinput.h>
 //#define DIRECTINPUT_VERSION 0x0800
 
-void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
+void Input::Initialize(WinApp* winApp)
 {
+	this->winApp = winApp;
+	
 
 	ComPtr<IDirectInput8> directinput = nullptr;
-	result = DirectInput8Create(hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directinput, nullptr);
+	result = DirectInput8Create(winApp->GetInstance(), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directinput, nullptr);
 	assert(SUCCEEDED(result));
 
 	ComPtr<IDirectInputDevice8> keybord;
@@ -19,7 +21,7 @@ void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
 	result = keyboard->SetDataFormat(&c_dfDIKeyboard);
 	assert(SUCCEEDED(result));
 
-	result = keyboard->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+	result = keyboard->SetCooperativeLevel(winApp->GetHwnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
 	assert(SUCCEEDED(result));
 
 }

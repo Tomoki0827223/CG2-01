@@ -550,7 +550,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//GE3
 	Input* input = nullptr;
 	input = new Input();
-	input->Initialize(winApp_->GetInstance(),winApp_->GetHwnd());
+	input->Initialize(winApp_);
 
 	//ウインドウを表示する
 	ShowWindow(winApp_->GetHwnd(), SW_SHOW);
@@ -1349,17 +1349,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 //	debugController->Release();
 //#endif
 
-	delete input;
-	delete winApp_;
-
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
+	//Windows終了
+	winApp_->Finalize();
 
-	CloseHandle(fenceEvent);
-	CloseWindow(winApp_->GetHwnd());
+	delete input;
+	delete winApp_;
+	//winApp_ = nullptr;
 
-	CoUninitialize();
+
+	//CloseHandle(fenceEvent);
+
+	//CoUninitialize();
 	return 0;
 }
