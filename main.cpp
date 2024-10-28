@@ -1126,11 +1126,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ImGui::StyleColorsDark();
 
-	while (msg.message != WM_QUIT) {
+	while (true) {
 
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+		if (winApp_->ProsessMeassage()) {
+
+			break;
 		}
 		else {
 
@@ -1185,20 +1185,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::SliderFloat3("Position", &transform.translate.x, -5.0f, 5.0f);
 			ImGui::SliderFloat3("Rotation", &transform.rotate.x, -180.0f, 180.0f);
 			ImGui::SliderFloat3("Scale", &transform.scale.x, 0.1f, 2.0f);
-			//ImGui::SliderFloat("MonsterBallsc", &w, 0.1f, 2.0f);
-			//ImGui::Checkbox("useMonsterball", &useMonsterBall);
-			//transformSprite.scale, transformSprite.rotate, transformSprite.translate
-			//ImGui::DragFloat3("UVTransScale", &transformSprite.scale.x, 0.1f);
-			//ImGui::DragFloat3("UVTransRotate", &transformSprite.rotate.x, 0.1f);
-			//ImGui::DragFloat3("UVTransTranslate", &transformSprite.translate.x);
-
-			//ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-			//ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-			//ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
-
-			//directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
-			//directionalLightData->direction = { 0.0f,-1.0f,0.0f };
-			//directionalLightData->intensity = 1.0f;
 
 			ImGui::End();
 
@@ -1308,46 +1294,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		}
 	}
-
-//	//リソース解放
-//	intermediateResources->Release();
-//	intermediateResources2->Release();
-//
-//	materialResource->Release();
-//	vertexResource->Release();
-//	depthStencilResouce->Release();
-//	depthStencilResource->Release();
-//	graphicsPipelineState->Release();
-//
-//	dsvDescriptorHeap->Release();
-//	srvDescriptorHeap->Release();
-//	transformationMatrixResourceSprite->Release();
-//	directionalLightResorce->Release();
-//	materialResourceSprite->Release();
-//	wvpResource->Release();
-//
-//	fence->Release();
-//	rtvDescriptorHeap->Release();
-//
-//	swapChainResources[0]->Release();
-//	swapChainResources[1]->Release();
-//
-//	swapChain->Release();
-//	commandList->Release();
-//	commandAllocator->Release();
-//	commandQueue->Release();
-//	device->Release();
-//	useadapter->Release();
-//	dxgiFactory->Release();
-//
-//	textureResource->Release();
-//	textureResource2->Release();
-//	vertexResourceSprite->Release();
-//	indexResourceSprite->Release();
-//
-//#ifdef _DEBUG
-//	debugController->Release();
-//#endif
 
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();

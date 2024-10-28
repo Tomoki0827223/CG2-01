@@ -2,6 +2,8 @@
 #include <Windows.h>
 #include <cstdint>
 #include <wrl.h>
+#include <WinUser.h>
+
 
 
 class WinApp
@@ -18,6 +20,8 @@ public:
 
 	HWND GetHwnd() const { return hwnd; }
 	HINSTANCE GetInstance() const { return wc.hInstance; }
+
+	bool ProsessMeassage();
 
 private:
 
