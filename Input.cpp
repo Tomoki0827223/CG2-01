@@ -1,3 +1,6 @@
+#pragma comment(lib,"dxguid.lib")
+#pragma comment(lib,"dinput8.lib")
+
 #include "Input.h"
 //#include <dinput.h>
 //#define DIRECTINPUT_VERSION 0x0800
