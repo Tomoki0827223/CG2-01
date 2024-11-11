@@ -27,6 +27,7 @@
 #include "Matrix4x4.h"
 #include "affine.h"
 #include "WinApp.h"
+#include "DirectXCommon.h"
 
 #include "Input.h"
 
@@ -123,60 +124,60 @@ struct D3DResourceLeakChecker
 #pragma endregion
 
 #pragma region ツール
-////ウインドウプローシャ
-//LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-//
-//	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam))
-//	{
-//		return true;
+//ウインドウプローシャ
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam))
+	{
+		return true;
+	}
+
+	switch (msg)
+	{
+
+	case WM_DESTROY:
+
+		PostQuitMessage(0);
+
+		return 0;
+	}
+
+	return DefWindowProc(hwnd, msg, wparam, lparam);
+}
+
+//std::wstring ConvertString(const std::string& str) {
+//	if (str.empty()) {
+//		return std::wstring();
 //	}
 //
-//	switch (msg)
-//	{
-//
-//	case WM_DESTROY:
-//
-//		PostQuitMessage(0);
-//
-//		return 0;
+//	auto sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), NULL, 0);
+//	if (sizeNeeded == 0) {
+//		return std::wstring();
 //	}
-//
-//	return DefWindowProc(hwnd, msg, wparam, lparam);
+//	std::wstring result(sizeNeeded, 0);
+//	MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), &result[0], sizeNeeded);
+//	return result;
 //}
-
-std::wstring ConvertString(const std::string& str) {
-	if (str.empty()) {
-		return std::wstring();
-	}
-
-	auto sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), NULL, 0);
-	if (sizeNeeded == 0) {
-		return std::wstring();
-	}
-	std::wstring result(sizeNeeded, 0);
-	MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), &result[0], sizeNeeded);
-	return result;
-}
-
-std::string ConvertString(const std::wstring& str) {
-	if (str.empty()) {
-		return std::string();
-	}
-
-	auto sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), NULL, 0, NULL, NULL);
-	if (sizeNeeded == 0) {
-		return std::string();
-	}
-	std::string result(sizeNeeded, 0);
-	WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
-	return result;
-}
-
-void Log(const std::string& message) {
-
-	OutputDebugStringA(message.c_str());
-
-}
+//
+//std::string ConvertString(const std::wstring& str) {
+//	if (str.empty()) {
+//		return std::string();
+//	}
+//
+//	auto sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), NULL, 0, NULL, NULL);
+//	if (sizeNeeded == 0) {
+//		return std::string();
+//	}
+//	std::string result(sizeNeeded, 0);
+//	WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
+//	return result;
+//}
+//
+//void Log(const std::string& message) {
+//
+//	OutputDebugStringA(message.c_str());
+//
+//}
 
 #pragma endregion
 
@@ -545,6 +546,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	winApp_ = new WinApp();
 	winApp_->Initialize();
 
+	DirectXCommon* dxCommom = nullptr;
+	dxCommom = new DirectXCommon();
+	dxCommom->Initialize();
+
 #pragma region Windowの生成
 
 	//GE3
@@ -559,108 +564,108 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #pragma endregion
 
-#ifdef _DEBUG
-
-	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;
-	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
-	{
-		debugController->EnableDebugLayer();
-
-		debugController->SetEnableSynchronizedCommandQueueValidation(TRUE);
-
-	}
-
-#endif
-
-#pragma region DXGIFactryの生成
-	//dxgiFactoryの生成
-	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory = nullptr;
-	//HRESULT→Windows系のエラーコード
-	//関数が成功したかどうかをSUCCEEDEDマクロで判定できる
-	HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
-	Microsoft::WRL::ComPtr<IDXGIAdapter4> useadapter = nullptr;
-	assert(SUCCEEDED(hr));
-#pragma endregion
-
-
-#pragma region 使用アダプタ(GPU)の決定
-
-	for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i,
-		DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useadapter)) !=
-		DXGI_ERROR_NOT_FOUND; ++i) {
-
-		DXGI_ADAPTER_DESC3 adapterDesc{};
-		hr = useadapter->GetDesc3(&adapterDesc);
-		assert(SUCCEEDED(hr));
-
-		if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
-			Log(ConvertString(std::format(L"Use Adapater:{}\n", adapterDesc.Description)));
-			break;
-		}
-		useadapter = nullptr;
-	}
-
-	assert(useadapter != nullptr);
-
-#pragma endregion
-
-#pragma region D3D12Deviceの生成
-
-	Microsoft::WRL::ComPtr<ID3D12Device> device = nullptr;
-	D3D_FEATURE_LEVEL featureLevels[] = {
-
-		D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0
-
-	};
-	const char* featureLevelStrrings[] = { "12.2","12.1","12.0" };
-
-	for (size_t i = 0; i < _countof(featureLevels); i++)
-	{
-		hr = D3D12CreateDevice(useadapter.Get(), featureLevels[i], IID_PPV_ARGS(&device));
-
-		if (SUCCEEDED(hr))
-		{
-			Log(std::format("FeatureLevel : {}\n", featureLevelStrrings[i]));
-			break;
-		}
-	}
-	//デバイスの生成がうまくいかなかったので起動できない
-	assert(device != nullptr);
-
-	Log("Complete create D3D12Device!!!\n");//初期化完了のログを出す
-
-#pragma endregion
-
-#ifdef _DEBUG
-
-	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
-	if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue))))
-	{
-		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
-		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
-		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
-
-		//抑制するメッセージのID
-		D3D12_MESSAGE_ID denyIds[] = {
-
-			//Windows11でのDXGIでバックプレイヤーとDX12デバッグレイヤーの互換作用バグによるエラーメッセージ
-			D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE
-		};
-
-		//抑制するレベル
-		D3D12_MESSAGE_SEVERITY serverities[] = { D3D12_MESSAGE_SEVERITY_INFO };
-		D3D12_INFO_QUEUE_FILTER filter{};
-		filter.DenyList.NumIDs = _countof(denyIds);
-		filter.DenyList.pIDList = denyIds;
-		filter.DenyList.NumSeverities = _countof(serverities);
-		filter.DenyList.pSeverityList = serverities;
-
-		//指定したメッセージの表示を抑制する
-		infoQueue->PushStorageFilter(&filter);
-
-	}
-
-#endif // _DEBUG
+//#ifdef _DEBUG
+//
+//	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;
+//	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+//	{
+//		debugController->EnableDebugLayer();
+//
+//		debugController->SetEnableSynchronizedCommandQueueValidation(TRUE);
+//
+//	}
+//
+//#endif
+//
+//#pragma region DXGIFactryの生成
+//	//dxgiFactoryの生成
+//	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory = nullptr;
+//	//HRESULT→Windows系のエラーコード
+//	//関数が成功したかどうかをSUCCEEDEDマクロで判定できる
+//	HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
+//	Microsoft::WRL::ComPtr<IDXGIAdapter4> useadapter = nullptr;
+//	assert(SUCCEEDED(hr));
+//#pragma endregion
+//
+//
+//#pragma region 使用アダプタ(GPU)の決定
+//
+//	for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i,
+//		DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useadapter)) !=
+//		DXGI_ERROR_NOT_FOUND; ++i) {
+//
+//		DXGI_ADAPTER_DESC3 adapterDesc{};
+//		hr = useadapter->GetDesc3(&adapterDesc);
+//		assert(SUCCEEDED(hr));
+//
+//		if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
+//			Log(ConvertString(std::format(L"Use Adapater:{}\n", adapterDesc.Description)));
+//			break;
+//		}
+//		useadapter = nullptr;
+//	}
+//
+//	assert(useadapter != nullptr);
+//
+//#pragma endregion
+//
+//#pragma region D3D12Deviceの生成
+//
+//	Microsoft::WRL::ComPtr<ID3D12Device> device = nullptr;
+//	D3D_FEATURE_LEVEL featureLevels[] = {
+//
+//		D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0
+//
+//	};
+//	const char* featureLevelStrrings[] = { "12.2","12.1","12.0" };
+//
+//	for (size_t i = 0; i < _countof(featureLevels); i++)
+//	{
+//		hr = D3D12CreateDevice(useadapter.Get(), featureLevels[i], IID_PPV_ARGS(&device));
+//
+//		if (SUCCEEDED(hr))
+//		{
+//			Log(std::format("FeatureLevel : {}\n", featureLevelStrrings[i]));
+//			break;
+//		}
+//	}
+//	//デバイスの生成がうまくいかなかったので起動できない
+//	assert(device != nullptr);
+//
+//	Log("Complete create D3D12Device!!!\n");//初期化完了のログを出す
+//
+//#pragma endregion
+//
+//#ifdef _DEBUG
+//
+//	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
+//	if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue))))
+//	{
+//		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+//		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+//		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+//
+//		//抑制するメッセージのID
+//		D3D12_MESSAGE_ID denyIds[] = {
+//
+//			//Windows11でのDXGIでバックプレイヤーとDX12デバッグレイヤーの互換作用バグによるエラーメッセージ
+//			D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE
+//		};
+//
+//		//抑制するレベル
+//		D3D12_MESSAGE_SEVERITY serverities[] = { D3D12_MESSAGE_SEVERITY_INFO };
+//		D3D12_INFO_QUEUE_FILTER filter{};
+//		filter.DenyList.NumIDs = _countof(denyIds);
+//		filter.DenyList.pIDList = denyIds;
+//		filter.DenyList.NumSeverities = _countof(serverities);
+//		filter.DenyList.pSeverityList = serverities;
+//
+//		//指定したメッセージの表示を抑制する
+//		infoQueue->PushStorageFilter(&filter);
+//
+//	}
+//
+//#endif // _DEBUG
 
 
 #pragma region コマンドキュー生成
@@ -877,12 +882,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	IDxcBlob* pixelShaderBlob = CompileShader(L"resources/shaders/Object3D.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
 	assert(pixelShaderBlob != nullptr);
 
-	//ここから03_01
-	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
-	depthStencilDesc.DepthEnable = true;
-	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-	//ここから03_01
+	////ここから03_01
+	//D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
+	//depthStencilDesc.DepthEnable = true;
+	//depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	//depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	////ここから03_01
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPinpelineStateDesc{};
 	graphicsPinpelineStateDesc.pRootSignature = rootSignature.Get();
@@ -961,7 +966,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));// 書き込むためのアドレスを取得
 	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData)* modelData.vertices.size());// 頂点データをリソースにコピー
 
-	//DepthStencilTextureを作成
+	////DepthStencilTextureを作成
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
 
 	//VertexBufferResourceを生成
@@ -1304,6 +1309,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	delete input;
 	delete winApp_;
+	delete dxCommom;
 	//winApp_ = nullptr;
 
 
