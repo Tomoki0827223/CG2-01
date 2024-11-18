@@ -1,23 +1,106 @@
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 
+#include <wrl.h> // 追加
 using namespace Microsoft::WRL;
 
 #include "DirectXCommon.h"
-#include <cassert>
-#include <format>
-#include "externals/DirectXTex/d3dx12.h"
 
-void DirectXCommon::Initialize()
-{
+void DirectXCommon::Initialize(WinApp* winApp) {
+	// NULL検出
 	assert(winApp);
-	this->winApp = winApp;
+	// メンバ変数に記録
+	this->winApp_ = winApp;
 
-	HRESULT hr;
+	// デバイスの生成
+	CreateDevice();
+	// コマンド関連の初期化
+	InitializeCommandObjects();
+	// スワップチェーンの生成
+	CreateSwapChain();
+	// 深度バッファの生成
+	CreateDepthBuffer();
+	// 各種デスクリプタヒープの生成
+	CreateDescriptorHeaps();
+	// レンダーターゲットビューの初期化
+	InitializeRenderTargetView();
+	// 深度ステンシルビューの初期化
+	InitializeDepthStencilView();
+	// フェンスの初期化
+	InitializeFence();
+	// ビューポート矩形の初期化
+	InitializeViewportAndScissorRect();
+	// DXCコンパイラの生成
+	CreateDXCCompiler();
+	// ImGuiの初期化
+	InitializeImGui();
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t index) {
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	handle.Offset(index, srvDescriptorSize);
+	return handle;
 
 }
 
-void DirectXCommon::DXcommom()
+D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t index) {
+	
+	CD3DX12_GPU_DESCRIPTOR_HANDLE handle(srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	handle.Offset(index, srvDescriptorSize);
+	return handle;
+
+}
+
+
+Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+	heapDesc.Type = heapType;
+	heapDesc.NumDescriptors = numDescriptors;
+	heapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> heap;
+	HRESULT hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap));
+	assert(SUCCEEDED(hr));
+	return heap;
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height) {
+	D3D12_RESOURCE_DESC depthDesc = {};
+	depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthDesc.Alignment = 0;
+	depthDesc.Width = width;
+	depthDesc.Height = height;
+	depthDesc.DepthOrArraySize = 1;
+	depthDesc.MipLevels = 1;
+	depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthDesc.SampleDesc.Count = 1;
+	depthDesc.SampleDesc.Quality = 0;
+	depthDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	depthDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	D3D12_CLEAR_VALUE clearValue = {};
+	clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	clearValue.DepthStencil.Depth = 1.0f;
+	clearValue.DepthStencil.Stencil = 0;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
+
+	CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&depthDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&clearValue,
+		IID_PPV_ARGS(&depthStencilResource)
+	);
+	assert(SUCCEEDED(hr));
+
+	return depthStencilResource;
+}
+
+void DirectXCommon::CreateDevice()
 {
 #ifdef _DEBUG
 
@@ -123,13 +206,13 @@ void DirectXCommon::DXcommom()
 #endif // _DEBUG
 }
 
-void DirectXCommon::CommandQueue()
+void DirectXCommon::InitializeCommandObjects()
 {
 	HRESULT hr;
 
 	//コマンドキュー生成
 	//Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
-	
+
 	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
 	hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
 
@@ -149,12 +232,13 @@ void DirectXCommon::CommandQueue()
 	assert(SUCCEEDED(hr));
 }
 
-void DirectXCommon::SwapChain() {
+void DirectXCommon::CreateSwapChain()
+{
 	HRESULT hr;
 
 	// スワップチェインの設定
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-	swapChainDesc.Width = WinApp::kClientWidth;
+	swapChainDesc.Width = WinApp::kClientWidth;  // WinApp::kClientWidth を直接使用
 	swapChainDesc.Height = WinApp::kClientHeight;
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.SampleDesc.Count = 1;
@@ -168,7 +252,7 @@ void DirectXCommon::SwapChain() {
 	// 一時的に IDXGISwapChain1 として作成
 	hr = dxgiFactory->CreateSwapChainForHwnd(
 		commandQueue.Get(),
-		winApp->GetHwnd(),
+		winApp_->GetHwnd(),
 		&swapChainDesc,
 		nullptr,
 		nullptr,
@@ -176,7 +260,7 @@ void DirectXCommon::SwapChain() {
 	assert(SUCCEEDED(hr));
 
 	// IDXGISwapChain4 にキャスト
-	hr = tempSwapChain.As(&tempSwapChain);
+	hr = tempSwapChain.As(&swapChain);
 	assert(SUCCEEDED(hr));
 
 	// RTVディスクリプタヒープの生成
@@ -185,7 +269,6 @@ void DirectXCommon::SwapChain() {
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
 	hr = device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvDescriptorHeap));
 	assert(SUCCEEDED(hr));
 
@@ -195,7 +278,7 @@ void DirectXCommon::SwapChain() {
 
 	for (UINT i = 0; i < swapChainDesc.BufferCount; ++i) {
 		Microsoft::WRL::ComPtr<ID3D12Resource> backBuffer;
-		hr = tempSwapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
+		hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer));
 		assert(SUCCEEDED(hr));
 
 		device->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
@@ -204,11 +287,10 @@ void DirectXCommon::SwapChain() {
 }
 
 
-void DirectXCommon::DepthBuffer() {
-	// 深度ステンシルバッファ用のテクスチャリソースを作成
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(
-		device, WinApp::kClientWidth, WinApp::kClientHeight
-	);
+void DirectXCommon::CreateDepthBuffer()
+{
+	////DepthStencilTextureを作成
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
 
 	// 深度ステンシルビューの設定
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
@@ -222,18 +304,18 @@ void DirectXCommon::DepthBuffer() {
 	);
 }
 
-void DirectXCommon::InitializeDescriptorHeaps() {
+void DirectXCommon::CreateDescriptorHeaps()
+{
 	// RTV用デスクリプタヒープ
 	rtvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
-
 	// SRV用デスクリプタヒープ
 	srvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
-
 	// DSV用デスクリプタヒープ
 	dsvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 }
 
-void DirectXCommon::InitializeRTV() {
+void DirectXCommon::InitializeRenderTargetView()
+{
 	HRESULT hr;
 
 	// RTVヒープの設定
@@ -260,77 +342,126 @@ void DirectXCommon::InitializeRTV() {
 	}
 }
 
-
-void DirectXCommon::InitializeDSVHeap() {
-
+void DirectXCommon::InitializeDepthStencilView()
+{
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc{};
 	heapDesc.NumDescriptors = 1;
 	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-
 	HRESULT hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&dsvDescriptorHeap));
 	assert(SUCCEEDED(hr));
-
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t index) {
-
-	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-	handle.Offset(index, srvDescriptorSize);
-	return handle;
-
-}
-
-D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t index) {
-	
-	CD3DX12_GPU_DESCRIPTOR_HANDLE handle(srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	handle.Offset(index, srvDescriptorSize);
-	return handle;
-
-}
-
-
-Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
-	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-	heapDesc.Type = heapType;
-	heapDesc.NumDescriptors = numDescriptors;
-	heapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> heap;
-	HRESULT hr = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heap));
-	assert(SUCCEEDED(hr));
-	return heap;
-}
-
-Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height) {
-	D3D12_RESOURCE_DESC depthDesc = {};
-	depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	depthDesc.Alignment = 0;
-	depthDesc.Width = width;
-	depthDesc.Height = height;
-	depthDesc.DepthOrArraySize = 1;
-	depthDesc.MipLevels = 1;
-	depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthDesc.SampleDesc.Count = 1;
-	depthDesc.SampleDesc.Quality = 0;
-	depthDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	depthDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
-	D3D12_CLEAR_VALUE clearValue = {};
-	clearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	clearValue.DepthStencil.Depth = 1.0f;
-	clearValue.DepthStencil.Stencil = 0;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
-	HRESULT hr = device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		&depthDesc,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		&clearValue,
-		IID_PPV_ARGS(&depthStencilResource)
-	);
+void DirectXCommon::InitializeFence()
+{
+	uint64_t fenceValue = 0;
+	HRESULT hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	assert(SUCCEEDED(hr));
 
-	return depthStencilResource;
+	HANDLE fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	assert(fenceEvent != nullptr);
+}
+
+void DirectXCommon::InitializeViewportAndScissorRect()
+{
+    // ビューポートの設定
+    viewport_.TopLeftX = 0.0f;
+    viewport_.TopLeftY = 0.0f;
+    viewport_.Width = static_cast<float>(WinApp::kClientWidth);
+    viewport_.Height = static_cast<float>(WinApp::kClientHeight);
+    viewport_.MinDepth = 0.0f;
+    viewport_.MaxDepth = 1.0f;
+
+    // シザー矩形の設定
+    scissorRect_.left = 0;
+    scissorRect_.top = 0;
+    scissorRect_.right = WinApp::kClientWidth;
+    scissorRect_.bottom = WinApp::kClientHeight;
+}
+
+void DirectXCommon::CreateDXCCompiler()
+{
+	HRESULT hr;
+
+	// DXC Utils の初期化
+	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	assert(SUCCEEDED(hr));
+
+	// DXC Compiler の初期化
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	assert(SUCCEEDED(hr));
+
+	// Include Handler の初期化
+	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+	assert(SUCCEEDED(hr));
+}
+
+
+IDxcBlob* DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile)
+{
+	// 1. HLSLファイルを読み込む
+	Logger::Log(StringUitilty::ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
+
+	Microsoft::WRL::ComPtr<IDxcBlobEncoding> shaderSource;
+	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
+	assert(SUCCEEDED(hr));
+
+	DxcBuffer shaderSourceBuffer;
+	shaderSourceBuffer.Ptr = shaderSource->GetBufferPointer();
+	shaderSourceBuffer.Size = shaderSource->GetBufferSize();
+	shaderSourceBuffer.Encoding = DXC_CP_UTF8;
+
+	// 2. コンパイルする
+	LPCWSTR arguments[] = {
+		filePath.c_str(),
+		L"-E", L"main",
+		L"-T", profile,
+		L"-Zi", L"-Qembed_debug",
+		L"-Od",
+		L"-Zpr",
+	};
+
+	Microsoft::WRL::ComPtr<IDxcResult> shaderResult;
+	hr = dxcCompiler->Compile(&shaderSourceBuffer, arguments, _countof(arguments), includeHandler.Get(), IID_PPV_ARGS(&shaderResult));
+	assert(SUCCEEDED(hr));
+
+	// 3. 警告・エラーが出てないか確認する
+	Microsoft::WRL::ComPtr<IDxcBlobUtf8> shaderError;
+	hr = shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
+	if (shaderError != nullptr && shaderError->GetStringLength() != 0)
+	{
+		Logger::Log(shaderError->GetStringPointer());
+		assert(false);
+	}
+
+	// 4. コンパイル結果を受け取って返す
+	hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), &shaderOutputName);
+
+	assert(SUCCEEDED(hr));
+
+	Logger::Log(StringUitilty::ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
+
+	return shaderBlob.Detach();
+}
+
+
+void DirectXCommon::InitializeImGui()
+{
+    // ImGuiのコンテキストを作成
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+
+    // ImGuiのIOを取得
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+
+    // ImGuiのスタイルを設定
+    ImGui::StyleColorsDark();
+
+    // プラットフォーム/レンダー用のバインディング
+    ImGui_ImplWin32_Init(winApp_->GetHwnd());
+    ImGui_ImplDX12_Init(device.Get(), 2,
+        DXGI_FORMAT_R8G8B8A8_UNORM, srvDescriptorHeap.Get(),
+        srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 }
