@@ -17,6 +17,8 @@
 #include "externals/imgui/imgui_impl_win32.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 
+#include "externals/DirectXTex/DirectXTex.h"
+
 
 class DirectXCommon
 {
@@ -58,9 +60,16 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
     D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(Microsoft::WRL::ComPtr<ID3D12Device> device, size_t sizeInBytes);
+
     // デスクリプタヒープを作成
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
-    Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height);
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource> texture, const DirectX::ScratchImage& mipImages, Microsoft::WRL::ComPtr<ID3D12Device> device,
+        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList);
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, const DirectX::TexMetadata& metadata);
+    //Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height);
 
     // DirectX 12 で使うリソースやハンドル
     Microsoft::WRL::ComPtr<ID3D12Device> device;
@@ -73,6 +82,7 @@ public:
     // コマンドキュー、コマンドアロケータ、コマンドリスト
     Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator = nullptr;
+    
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
 
     Microsoft::WRL::ComPtr<IDXGISwapChain1> tempSwapChain = nullptr;
@@ -82,6 +92,15 @@ public:
     Microsoft::WRL::ComPtr<IDxcBlobUtf16> shaderOutputName;
 
     Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
+	HANDLE fenceEvent = nullptr;
+
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2] = { nullptr };
+    //ディスクリプタの先頭を取得する
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    //RTVを二つ作るのでディスクリプタを二つ用意
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+
     uint64_t fenceValue = 0;
     HRESULT hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 
