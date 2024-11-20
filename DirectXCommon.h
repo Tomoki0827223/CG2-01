@@ -21,7 +21,6 @@
 class DirectXCommon
 {
 public:
-
     // デバイスの生成
     void CreateDevice();
     // コマンド関連の初期化
@@ -43,11 +42,15 @@ public:
     // DXCコンパイラの生成
     void CreateDXCCompiler();
 
+    // 描画前処理
+    void PreDraw();
+    // 描画後処理
+    void PostDraw();
+
     IDxcBlob* CompileShader(const std::wstring& filePath, const wchar_t* profile);
 
     // ImGuiの初期化
     void InitializeImGui();
-
 
     void Initialize(WinApp* winApp);
 
@@ -72,7 +75,6 @@ public:
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator = nullptr;
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
 
-
     Microsoft::WRL::ComPtr<IDXGISwapChain1> tempSwapChain = nullptr;
     Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain;
 
@@ -80,6 +82,8 @@ public:
     Microsoft::WRL::ComPtr<IDxcBlobUtf16> shaderOutputName;
 
     Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
+    uint64_t fenceValue = 0;
+    HRESULT hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 
     WinApp* winApp_ = nullptr;
 
