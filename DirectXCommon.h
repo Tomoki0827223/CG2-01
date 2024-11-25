@@ -13,6 +13,7 @@ class DirectXCommon
 {
 public:
 
+
 	void Initialize(WinApp* winApp);
 
     // デバイスの生成
