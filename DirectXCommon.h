@@ -10,6 +10,7 @@
 #include <numbers>
 #include <fstream>
 #include <sstream>
+#include <array>
 #include "WinApp.h"
 
 #include "Logger.h"
@@ -60,8 +61,11 @@ public:
     void Initialize(WinApp* winApp);
 
     // SRVとGPUのデスクリプタハンドル取得関数
-    D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
-    D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
+    static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>&descriptorHeap, uint32_t descriptorSize, uint32_t index);
+    static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>&descriptorHeap, uint32_t descriptorSize, uint32_t index);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE GetsrvCPUDescriptorHandle(uint32_t index);
+    D3D12_GPU_DESCRIPTOR_HANDLE GetsrvGPUDescriptorHandle(uint32_t index);
 
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(Microsoft::WRL::ComPtr<ID3D12Device> device, size_t sizeInBytes);
 
@@ -69,17 +73,46 @@ public:
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 
     Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource> texture, const DirectX::ScratchImage& mipImages, Microsoft::WRL::ComPtr<ID3D12Device> device,
-        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList);
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList);
 
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, const DirectX::TexMetadata& metadata);
     //Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height);
 
+    // device のゲッター関数
+    Microsoft::WRL::ComPtr<ID3D12Device> GetDevice() const { return device; }
+
+	// コマンドキューのゲッター関数
+	Microsoft::WRL::ComPtr<ID3D12CommandQueue> GetCommandQueue() const { return commandQueue; }
+
+	// コマンドアロケータのゲッター関数
+	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> GetCommandAllocator() const { return commandAllocator; }
+
+	// コマンドリストのゲッター関数
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> GetCommandList() const { return commandList; }
+
+	// スワップチェーンのゲッター関数
+	Microsoft::WRL::ComPtr<IDXGISwapChain4> GetSwapChain() const { return swapChain; }
+
+	// RTVディスクリプタヒープのゲッター関数
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetRTVDescriptorHeap() const { return rtvDescriptorHeap; }
+
     // DirectX 12 で使うリソースやハンドル
     Microsoft::WRL::ComPtr<ID3D12Device> device;
+
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return srvDescriptorHeap; }
+
+    uint32_t descriptorSizeSRV = 0;
+    uint32_t descriptorSizeRTV = 0;
+    uint32_t descriptorSizeDSV = 0;
+
+private:
+
     Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
+
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
+    
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap;
 
     // コマンドキュー、コマンドアロケータ、コマンドリスト
@@ -91,18 +124,25 @@ public:
     Microsoft::WRL::ComPtr<IDXGISwapChain1> tempSwapChain = nullptr;
     Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain;
 
+private:
+
     Microsoft::WRL::ComPtr<IDxcBlob> shaderBlob;
     Microsoft::WRL::ComPtr<IDxcBlobUtf16> shaderOutputName;
 
     Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
 	HANDLE fenceEvent = nullptr;
 
+public:
 
-    Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[2] = { nullptr };
+    std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
+
     //ディスクリプタの先頭を取得する
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    //D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
     //RTVを二つ作るのでディスクリプタを二つ用意
+
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+
+private:
 
     uint64_t fenceValue = 0;
     HRESULT hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
@@ -119,6 +159,4 @@ public:
     Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
     Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
     Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
-
-private:
 };

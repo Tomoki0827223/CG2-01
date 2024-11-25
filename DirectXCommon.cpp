@@ -1,6 +1,7 @@
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 
+
 #include <wrl.h> // 追加
 using namespace Microsoft::WRL;
 
@@ -38,20 +39,28 @@ void DirectXCommon::Initialize(WinApp* winApp) {
 	InitializeImGui();
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t index) {
-
-	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-	handle.Offset(index, srvDescriptorSize);
-	return handle;
-
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index)
+{
+	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	handleCPU.ptr += (descriptorSize * index);
+	return handleCPU;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t index) {
-	
-	CD3DX12_GPU_DESCRIPTOR_HANDLE handle(srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	handle.Offset(index, srvDescriptorSize);
-	return handle;
+D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	handleGPU.ptr += (descriptorSize * index);
+	return handleGPU;
+}
 
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetsrvCPUDescriptorHandle(uint32_t index)
+{
+	return GetCPUDescriptorHandle(srvDescriptorHeap, srvDescriptorSize, index);
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetsrvGPUDescriptorHandle(uint32_t index)
+{
+	return GetGPUDescriptorHandle(srvDescriptorHeap, srvDescriptorSize, index);
 }
 
 // リソースの関数化
@@ -371,14 +380,19 @@ void DirectXCommon::CreateDepthBuffer()
     dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
     dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 
-    // 深度ステンシルビューをディスクリプタヒープに作成
-    device->CreateDepthStencilView(
-        depthStencilResource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart()
-    );
+	// 深度ステンシルビューをディスクリプタヒープに作成
+	device->CreateDepthStencilView(
+		depthStencilResource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+
 }
 
 void DirectXCommon::CreateDescriptorHeaps()
 {
+	descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+
 	// RTV用デスクリプタヒープ
 	rtvDescriptorHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
 	// SRV用デスクリプタヒープ
