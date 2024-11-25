@@ -1,3 +1,15 @@
+#include "externals/DirectXTex/DirectXTex.h"
+
+#include "Vector4.h"
+#include "Vector3.h"
+#include "Vector2.h"
+#include "Matrix4x4.h"
+#include "affine.h"
+#include "WinApp.h"
+#include "DirectXCommon.h"
+
+#include "Input.h"
+
 #pragma comment(lib, "dxcompiler.lib")
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3d12.lib")
@@ -18,18 +30,6 @@
 #include <fstream>
 #include <sstream>
 #include <wrl.h>
-
-#include "externals/DirectXTex/DirectXTex.h"
-
-#include "Vector4.h"
-#include "Vector3.h"
-#include "Vector2.h"
-#include "Matrix4x4.h"
-#include "affine.h"
-#include "WinApp.h"
-#include "DirectXCommon.h"
-
-#include "Input.h"
 
 #define _USE_MATH_DEFINES
 #include "math.h"
