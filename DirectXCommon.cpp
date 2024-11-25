@@ -28,8 +28,60 @@ void DirectXCommon::Initialize(WinApp* winApp) {
     InitializeFence();
     // ビューポート矩形の初期化
     InitializeViewportAndScissorRect();
+	//シザリング矩形の初期化
+	InitializeScissorRect();
     // DXCコンパイラの生成
     CreateDXCCompiler();
     // ImGuiの初期化
 	InitializeImGui();
+}
+
+void DirectXCommon::CreateDevice()
+{
+    
+}
+
+void DirectXCommon::InitializeCommandObjects()
+{
+}
+
+void DirectXCommon::CreateSwapChain()
+{
+}
+
+void DirectXCommon::CreateDepthBuffer()
+{
+}
+
+void DirectXCommon::CreateDescriptorHeaps()
+{
+}
+
+void DirectXCommon::InitializeRenderTargetView()
+{
+}
+
+void DirectXCommon::InitializeDepthStencilView()
+{
+}
+
+void DirectXCommon::InitializeFence()
+{
+}
+
+void DirectXCommon::InitializeViewportAndScissorRect()
+{
+}
+
+void DirectXCommon::InitializeScissorRect()
+{
+
+}
+
+void DirectXCommon::CreateDXCCompiler()
+{
+}
+
+void DirectXCommon::InitializeImGui()
+{
 }
