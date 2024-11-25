@@ -1,4 +1,9 @@
 #pragma once
+
+#ifndef _AMD64_
+#define _AMD64_
+#endif
+
 #include <string>
 #include <ostream>
 #include <debugapi.h>
