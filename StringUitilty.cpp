@@ -2,9 +2,7 @@
 
 namespace StringUitilty {
 
-
-    std::wstring StringUitilty::ConvertString(const std::string& str)
-    {
+	std::wstring ConvertString(const std::string& str) {
 		if (str.empty()) {
 			return std::wstring();
 		}
@@ -16,10 +14,9 @@ namespace StringUitilty {
 		std::wstring result(sizeNeeded, 0);
 		MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), &result[0], sizeNeeded);
 		return result;
-    }
+	}
 
-    std::string StringUitilty::ConvertString(const std::wstring& str)
-    {
+	std::string ConvertString(const std::wstring& str) {
 		if (str.empty()) {
 			return std::string();
 		}
@@ -31,6 +28,6 @@ namespace StringUitilty {
 		std::string result(sizeNeeded, 0);
 		WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
 		return result;
-    }
+	}
 
 }
