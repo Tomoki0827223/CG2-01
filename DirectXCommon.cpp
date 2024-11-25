@@ -14,34 +14,34 @@
 using namespace Microsoft::WRL;
 
 void DirectXCommon::Initialize(WinApp* winApp) {
-    // NULL検出
-    assert(winApp);
-    // メンバ変数に記録
-    this->winApp_ = winApp;
+	// NULL検出
+	assert(winApp);
+	// メンバ変数に記録
+	this->winApp_ = winApp;
 
-    // デバイスの生成
-    CreateDevice();
-    // コマンド関連の初期化
-    InitializeCommandObjects();
-    // スワップチェーンの生成
-    CreateSwapChain();
-    // 深度バッファの生成
-    CreateDepthBuffer();
-    // 各種デスクリプタヒープの生成
-    CreateDescriptorHeaps();
-    // レンダーターゲットビューの初期化
-    InitializeRenderTargetView();
-    // 深度ステンシルビューの初期化
-    InitializeDepthStencilView();
-    // フェンスの初期化
-    InitializeFence();
-    // ビューポート矩形の初期化
-    InitializeViewportAndScissorRect();
+	// デバイスの生成
+	CreateDevice();
+	// コマンド関連の初期化
+	InitializeCommandObjects();
+	// スワップチェーンの生成
+	CreateSwapChain();
+	// 深度バッファの生成
+	CreateDepthBuffer();
+	// 各種デスクリプタヒープの生成
+	CreateDescriptorHeaps();
+	// レンダーターゲットビューの初期化
+	InitializeRenderTargetView();
+	// 深度ステンシルビューの初期化
+	InitializeDepthStencilView();
+	// フェンスの初期化
+	InitializeFence();
+	// ビューポート矩形の初期化
+	InitializeViewportAndScissorRect();
 	//シザリング矩形の初期化
 	InitializeScissorRect();
-    // DXCコンパイラの生成
-    CreateDXCCompiler();
-    // ImGuiの初期化
+	// DXCコンパイラの生成
+	CreateDXCCompiler();
+	// ImGuiの初期化
 	InitializeImGui();
 }
 
@@ -192,7 +192,7 @@ void DirectXCommon::CreateSwapChain()
 	assert(SUCCEEDED(hr));
 }
 
-void DirectXCommon::CreateDepthBuffer()
+Microsoft::WRL::ComPtr<ID3D12Resource>DirectXCommon::CreateDepthBuffer()
 {
 	D3D12_RESOURCE_DESC resorceDesc{};
 	resorceDesc.Width = winApp_->kClientWidth;
@@ -220,6 +220,8 @@ void DirectXCommon::CreateDepthBuffer()
 		&depthClearValue,
 		IID_PPV_ARGS(&resource));
 	assert(SUCCEEDED(hr));
+
+	return resource;
 }
 
 
@@ -253,11 +255,12 @@ void DirectXCommon::InitializeRenderTargetView()
 
 void DirectXCommon::InitializeDepthStencilView()
 {
-	Microsoft::WRL::ComPtr <ID3D12Resource> depthStencilResource;
 	//DSVの設定
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//Format.基本的にはResourceに合わせる
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;//2dTexture
+
 	//DSVHeapの先頭にDSVをつくる
+	depthStencilResource = CreateDepthBuffer();
 	device->CreateDepthStencilView(depthStencilResource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 }
@@ -338,18 +341,19 @@ void DirectXCommon::PreDraw()
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	commandList->ResourceBarrier(1, &barrier);
 
-	//描画先のRTVを設定する
-	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
-
 	// 描画先のRTVとDSVを設定
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
+	//描画先のRTVを設定する
+	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
+
 	// 画面全体を指定した色でクリア
 	float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
-	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
-	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
+	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
+
+	//commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
 
 	// 描画用のデスクリプタヒープの設定
 	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
@@ -367,9 +371,9 @@ void DirectXCommon::PreDraw()
 
 void DirectXCommon::PostDraw()
 {
-	// ImGuiの描画終了
-	ImGui::Render();
-	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
+	//// ImGuiの描画終了
+	//ImGui::Render();
+	//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
 
 	// リソースバリアでプレゼント状態に変更
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -380,6 +384,39 @@ void DirectXCommon::PostDraw()
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	commandList->ResourceBarrier(1, &barrier);
+
+	// コマンドリストの内容を確定させる
+
+	HRESULT hr = commandList->Close();
+	assert(SUCCEEDED(hr));
+
+
+	// GPUにコマンドリストの実行を行わせる
+
+	ID3D12CommandList* commandLists[] = { commandList.Get()};
+
+	commandQueue->ExecuteCommandLists(1, commandLists);
+
+
+	// GPUとOSに画面の交換を行うように通知する
+	swapChain->Present(1, 0);
+
+
+	// シグナルとフェンスの処理
+	fenceValue++;
+	commandQueue->Signal(fence.Get(), fenceValue);
+
+	if (fence->GetCompletedValue() < fenceValue)
+	{
+		fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
+
+	// 次のフレーム用のコマンドリストを準備
+	hr = commandAllocator->Reset();
+	assert(SUCCEEDED(hr));
+	hr = commandList->Reset(commandAllocator.Get(), nullptr);
+	assert(SUCCEEDED(hr));
 }
 
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(Microsoft::WRL::ComPtr<ID3D12Device> device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
