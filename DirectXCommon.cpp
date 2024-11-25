@@ -3,6 +3,8 @@
 #include <cassert>
 #include <combaseapi.h>
 #include <d3d12.h>
+#include <dxgi1_6.h>
+#include "Logger.h"
 
 void DirectXCommon::Initialize(WinApp* winApp) {
     // NULL検出
