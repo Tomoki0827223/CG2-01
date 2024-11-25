@@ -1,9 +1,11 @@
 #pragma once
+#include "WinApp.h"
+
 class DirectXCommon
 {
 public:
 
-	void Initialize();
+	void Initialize(WinApp* winApp);
 
 };
 
