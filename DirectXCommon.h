@@ -42,6 +42,8 @@ public:
     void InitializeFence();
     // ビューポート矩形の初期化
     void InitializeViewportAndScissorRect();
+	//シザリング矩形の初期化
+	void InitializeScissorRect();
     // DXCコンパイラの生成
     void CreateDXCCompiler();
 

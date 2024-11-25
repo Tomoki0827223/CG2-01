@@ -30,6 +30,8 @@ void DirectXCommon::Initialize(WinApp* winApp) {
 	InitializeFence();
 	// ビューポート矩形の初期化
 	InitializeViewportAndScissorRect();
+	//シザリング矩形の初期化
+	InitializeScissorRect();
 	// DXCコンパイラの生成
 	CreateDXCCompiler();
 	// ImGuiの初期化
@@ -447,12 +449,15 @@ void DirectXCommon::InitializeViewportAndScissorRect()
     viewport_.Height = static_cast<float>(WinApp::kClientHeight);
     viewport_.MinDepth = 0.0f;
     viewport_.MaxDepth = 1.0f;
+}
 
-    // シザー矩形の設定
-    scissorRect_.left = 0;
-    scissorRect_.top = 0;
-    scissorRect_.right = WinApp::kClientWidth;
-    scissorRect_.bottom = WinApp::kClientHeight;
+void DirectXCommon::InitializeScissorRect()
+{
+	// シザー矩形の設定
+	scissorRect_.left = 0;
+	scissorRect_.top = 0;
+	scissorRect_.right = WinApp::kClientWidth;
+	scissorRect_.bottom = WinApp::kClientHeight;
 }
 
 void DirectXCommon::CreateDXCCompiler()
