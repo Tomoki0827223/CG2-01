@@ -39,7 +39,10 @@ public:
     void CreateDXCCompiler();
     // ImGuiの初期化
     void InitializeImGui();
-
+    //描画前処理
+    void PreDraw();
+	//描画後処理
+    void PostDraw();
 
     //// デバイスの生成
     //Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;
@@ -64,7 +67,11 @@ public:
     std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
 
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap = nullptr;
+    //RTVを二つ作るのでディスクリプタを二つ用意
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
+
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap = nullptr;
 
@@ -100,6 +107,14 @@ public:
     IDxcCompiler3* dxcCompiler = nullptr;
     //include対応のため設定しておく
     IDxcIncludeHandler* includeHandler = nullptr;
+
+    //フェンスの生成
+    Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
+	UINT64 fenceValue = 0;
+	HANDLE fenceEvent = nullptr;
+
+    D3D12_VIEWPORT viewport{};
+    D3D12_RECT scissorRect{};
 
 private:
 
