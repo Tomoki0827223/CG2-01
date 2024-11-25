@@ -9,6 +9,7 @@
 #include "externals/DirectXTex/DirectXTex.h"
 #include <dxcapi.h>
 
+
 class DirectXCommon
 {
 public:
