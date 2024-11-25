@@ -27,6 +27,8 @@ public:
     void InitializeViewportAndScissorRect();
     // DXCコンパイラの生成
     void CreateDXCCompiler();
+    // ImGuiの初期化
+    void InitializeImGui();
 
 };
 
