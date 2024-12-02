@@ -8,6 +8,8 @@
 #include "Logger.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include <dxcapi.h>
+#include <chrono>
+#include <thread>
 
 class DirectXCommon
 {
@@ -44,6 +46,11 @@ public:
     void PreDraw();
 	//描画後処理
     void PostDraw();
+
+    // FPS固定初期化
+    void InitializeFixFPS();
+    // FPS固定更新
+    void UpdateFixFPS();
 
     //Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, const DirectX::TexMetadata& metadata);
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(Microsoft::WRL::ComPtr<ID3D12Device> device, 
@@ -110,6 +117,9 @@ public:
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height);
 
 private:
+
+    //記録時間(FPS固定用)
+    std::chrono::steady_clock::time_point reference_;
 
     //// デバイスの生成
     //Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;

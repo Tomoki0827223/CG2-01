@@ -398,7 +398,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//ID3D12Resource* vertexResource = vertexResourceComPtr.Get();
 
 	//モデル読み込み
-	ModelData modelData = LoaObjFile("resources", "Bunny.obj");
+	ModelData modelData = LoaObjFile("resources", "axis.obj");
 
 	//ModelData modelData = LoaObjFile("resources", "plane.obj");
 	//ModelData modelData = LoaObjFile("resources", "plane.obj");
