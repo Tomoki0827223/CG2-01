@@ -73,6 +73,8 @@ public:
     ID3D12Device* GetDevice() const { return device.Get(); }
     ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
 
+    Microsoft::WRL::ComPtr<IDxcBlob> compileShader(const std::wstring& filePath, const wchar_t* profile);
+
 private:
 
     //// デバイスの生成

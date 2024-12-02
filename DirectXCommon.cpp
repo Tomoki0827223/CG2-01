@@ -458,3 +458,8 @@ D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t in
 {
 	return GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
 }
+
+Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::compileShader(const std::wstring& filePath, const wchar_t* profile)
+{
+	return Microsoft::WRL::ComPtr<IDxcBlob>();
+}
