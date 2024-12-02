@@ -68,6 +68,11 @@ public:
     /// </summary>
     D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 
+    
+    //Getter
+    ID3D12Device* GetDevice() const { return device.Get(); }
+    ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
+
 private:
 
     //// デバイスの生成
