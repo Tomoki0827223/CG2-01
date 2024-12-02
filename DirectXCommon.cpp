@@ -13,6 +13,7 @@
 
 using namespace Microsoft::WRL;
 
+
 void DirectXCommon::Initialize(WinApp* winApp) {
 	// NULL検出
 	assert(winApp);
