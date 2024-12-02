@@ -90,7 +90,7 @@ public:
     /// </summary>
     
     [[nodiscard]]
-    void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
+    Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource> texture, const DirectX::ScratchImage& mipImages);
 
     /// <summary>
     /// テクスチャファイルの読み込み
