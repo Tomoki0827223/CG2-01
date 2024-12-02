@@ -605,6 +605,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::SliderFloat3("Position", &transform.translate.x, -5.0f, 5.0f);
 			ImGui::SliderFloat3("Rotation", &transform.rotate.x, -180.0f, 180.0f);
 			ImGui::SliderFloat3("Scale", &transform.scale.x, 0.1f, 2.0f);
+			//ImGui::SliderFloat("MonsterBallsc", &w, 0.1f, 2.0f);
+			ImGui::Checkbox("useMonsterball", &useMonsterBall);
 			ImGui::End();
 
 			// ImGuiの描画
