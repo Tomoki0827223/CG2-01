@@ -149,7 +149,7 @@
 //
 //#pragma endregion
 //
-//#pragma region コンパイルシェーダー
+////#pragma region コンパイルシェーダー
 //IDxcBlob* CompileShader(
 //
 //	const std::wstring& filePath,

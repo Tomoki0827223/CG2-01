@@ -75,6 +75,30 @@ public:
 
     Microsoft::WRL::ComPtr<IDxcBlob> compileShader(const std::wstring& filePath, const wchar_t* profile);
 
+    /// <summary>
+    /// バッファリソースの生成
+    /// </summary>
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
+
+    /// <summary>
+    /// テクスチャリソースの生成
+    /// </summary>
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(
+        ID3D12Device* device, const DirectX::TexMetadata& metadata);
+    /// <summary>
+    /// テクスチャデータの転送
+    /// </summary>
+    
+    [[nodiscard]]
+    void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
+
+    /// <summary>
+    /// テクスチャファイルの読み込み
+    /// </summary>
+    /// <param name="filePath">テクスチャファイルのパス</param>
+    /// <returns>画像イメージデータ</returns>
+    static DirectX::ScratchImage LoadTexture(const std::string& filePath);
+
 private:
 
     //// デバイスの生成
