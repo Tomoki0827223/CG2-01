@@ -504,22 +504,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexDataSprite[3].texcoord = { 1.0f, 0.0f };
 	vertexDataSprite[3].nomal = { 0.0f, 0.0f, -1.0f };
 
-	D3D12_VIEWPORT viewport{};
-
-	viewport.Width = winApp_->kClientWidth;
-	viewport.Height = winApp_->kClientHeight;
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.MinDepth = 0.0f;
-	viewport.MaxDepth = 1.0f;
-
-	D3D12_RECT scissorRect{};
-
-	scissorRect.left = 0;
-	scissorRect.right = winApp_->kClientWidth;
-	scissorRect.top = 0;
-	scissorRect.bottom = winApp_->kClientHeight;
-
 	TransformVector3 transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	TransformVector3 cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
@@ -627,8 +611,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::Render();
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
 
-			dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
-			dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
+			//dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
+			//dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
+
+			dxCommon->InitializeViewportAndScissorRect();
+			dxCommon->InitializeScissorRect();
+
 			//RootSignatureを設定。PSOに設定しているけど別途設定が必要
 			dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 			dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());

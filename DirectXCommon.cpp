@@ -283,7 +283,6 @@ void DirectXCommon::InitializeFence()
 
 void DirectXCommon::InitializeViewportAndScissorRect()
 {
-
 	viewport.Width = winApp_->kClientWidth;
 	viewport.Height = winApp_->kClientHeight;
 	viewport.TopLeftX = 0;
@@ -291,15 +290,18 @@ void DirectXCommon::InitializeViewportAndScissorRect()
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 
-}
-
-void DirectXCommon::InitializeScissorRect()
-{
-
+	// シザーレクトの設定
 	scissorRect.left = 0;
 	scissorRect.right = winApp_->kClientWidth;
 	scissorRect.top = 0;
 	scissorRect.bottom = winApp_->kClientHeight;
+}
+
+void DirectXCommon::InitializeScissorRect()
+{
+	// ビューポートとシザーレクトを設定
+	GetCommandList()->RSSetViewports(1, &viewport);
+	GetCommandList()->RSSetScissorRects(1, &scissorRect);
 }
 
 void DirectXCommon::CreateDXCCompiler()
