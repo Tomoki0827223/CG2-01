@@ -72,6 +72,11 @@ public:
     //Getter
     ID3D12Device* GetDevice() const { return device.Get(); }
     ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetDSVDescriptorHeap() const { return dsvDescriptorHeap; }
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetRTVDescriptorHeap() const { return rtvDescriptorHeap; }
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetSRVDescriptorHeap() const { return srvDescriptorHeap; }
+    uint32_t GetDescriptorSizeRTV() const { return descriptorSizeRTV; }
+    uint32_t GetDescriptorSizeSRV() const { return descriptorSizeSRV; }
 
     Microsoft::WRL::ComPtr<IDxcBlob> compileShader(const std::wstring& filePath, const wchar_t* profile);
 
@@ -98,6 +103,11 @@ public:
     /// <param name="filePath">テクスチャファイルのパス</param>
     /// <returns>画像イメージデータ</returns>
     static DirectX::ScratchImage LoadTexture(const std::string& filePath);
+
+	/// <summary>
+	/// 深度ステンシルテクスチャリソースの生成
+    /// 
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height);
 
 private:
 
