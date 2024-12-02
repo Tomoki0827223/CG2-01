@@ -461,5 +461,63 @@ D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t in
 
 Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::compileShader(const std::wstring& filePath, const wchar_t* profile)
 {
-	return Microsoft::WRL::ComPtr<IDxcBlob>();
+	HRESULT hr;
+
+	const std::wstring& filePath,
+
+		const wchar_t* profile,
+
+		IDxcUtils* dxcUtils,
+		IDxcCompiler3* dxcCompiler,
+		IDxcIncludeHandler* includeHandler)
+		{
+			//1.HLSLファイルを読み込む
+			Log(ConvertString(std::format(L"Begin CompileShader, path:{},profile:{}\n", filePath, profile)));
+
+			IDxcBlobEncoding* shaderSource = nullptr;
+			HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
+
+			assert(SUCCEEDED(hr));
+
+			DxcBuffer shaderSourceBeffer;
+
+			shaderSourceBeffer.Ptr = shaderSource->GetBufferPointer();
+			shaderSourceBeffer.Size = shaderSource->GetBufferSize();
+			shaderSourceBeffer.Encoding = DXC_CP_UTF8;
+
+			//2.コンパイルする
+			LPCWSTR arguments[] = {
+
+				filePath.c_str(),
+				L"-E",L"main",
+				L"-T",profile,
+				L"-Zi",L"-Qembed_debug",
+				L"-Od",
+				L"-Zpr",
+			};
+
+			IDxcResult* shaderResult = nullptr;
+			hr = dxcCompiler->Compile(&shaderSourceBeffer, arguments, _countof(arguments), includeHandler, IID_PPV_ARGS(&shaderResult));
+
+			assert(SUCCEEDED(hr));
+
+			//3.警告・エラーが出てないか確認する
+			IDxcBlobUtf8* shaderError = nullptr;
+
+			shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
+			if (shaderError != nullptr && shaderError->GetStringLength() != 0)
+			{
+				Log(shaderError->GetStringPointer());
+
+				assert(false);
+			}
+
+			//4.コンパイル結果を受け取って返す
+			IDxcBlob* shaderBlob = nullptr;
+			hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+			assert(SUCCEEDED(hr));
+
+			Log(ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
+
+			return shaderBlob;
 }
