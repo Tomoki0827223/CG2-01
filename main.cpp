@@ -1115,7 +1115,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
             // 描画前処理
             dxCommon->PreDraw();
 
-            //// ImGuiウィンドウの作成
+            // ImGuiウィンドウの作成
             //ImGui::Begin("Color");
             //ImGui::ColorEdit4("Text Color With Flags", &materialData->color.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
             //ImGui::End();
@@ -1131,33 +1131,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
             // 描画後処理
             dxCommon->PostDraw();
-
-            //// コマンドリストの内容を確定させる
-            //HRESULT hr = dxCommon->commandList->Close();
-            //assert(SUCCEEDED(hr));
-
-            //// GPUにコマンドリストの実行を行わせる
-            //Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { dxCommon->commandList };
-            //dxCommon->commandQueue->ExecuteCommandLists(1, commandLists->GetAddressOf());
-
-            //// GPUとOSに画面の交換を行うように通知する
-            //dxCommon->swapChain->Present(1, 0);
-
-            //// シグナルとフェンスの処理
-            //dxCommon->fenceValue++;
-            //dxCommon->commandQueue->Signal(dxCommon->fence.Get(), dxCommon->fenceValue);
-
-            //if (dxCommon->fence->GetCompletedValue() < dxCommon->fenceValue)
-            //{
-            //    dxCommon->fence->SetEventOnCompletion(dxCommon->fenceValue, dxCommon->fenceEvent);
-            //    WaitForSingleObject(dxCommon->fenceEvent, INFINITE);
-            //}
-
-            //// 次のフレーム用のコマンドリストを準備
-            //hr = dxCommon->commandAllocator->Reset();
-            //assert(SUCCEEDED(hr));
-            //hr = dxCommon->commandList->Reset(dxCommon->commandAllocator.Get(), nullptr);
-            //assert(SUCCEEDED(hr));
         }
     }
 
