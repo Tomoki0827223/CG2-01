@@ -611,6 +611,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
 			materialDataSprite->uvTransform = uvTransformMatrix;
 
+			// ImGuiのフレーム開始
+			ImGui_ImplWin32_NewFrame();
+			ImGui_ImplDX12_NewFrame();
+			ImGui::NewFrame();
+
+			// ImGuiウィンドウ
+			ImGui::Begin("Ball Controls");
+			ImGui::SliderFloat3("Position", &transform.translate.x, -5.0f, 5.0f);
+			ImGui::SliderFloat3("Rotation", &transform.rotate.x, -180.0f, 180.0f);
+			ImGui::SliderFloat3("Scale", &transform.scale.x, 0.1f, 2.0f);
+			ImGui::End();
+
+			// ImGuiの描画
+			ImGui::Render();
+			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
+
+
+
 			dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
 			dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 			//RootSignatureを設定。PSOに設定しているけど別途設定が必要
