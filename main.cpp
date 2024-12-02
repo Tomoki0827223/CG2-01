@@ -568,6 +568,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	MSG msg{};
 
+
 	dxCommon->InitializeImGui();
 
     while (true)
