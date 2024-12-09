@@ -13,6 +13,7 @@ void SpriteCommon::Initialize(DirectXCommon* dxCommon)
 	graphicsPipelineState();
 }
 
+
 void SpriteCommon::CommonRenderSettings()
 {
 	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature_.Get());
