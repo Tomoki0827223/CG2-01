@@ -4,6 +4,7 @@
 #pragma comment(lib, "dxgi.lib")
 
 #include "DirectXCommon.h"
+#include "SpriteCommon.h"
 #include "D3DResourceLeakChecker.h"
 #include "Input.h"
 #include "Vector2.h"
@@ -220,6 +221,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dxCommon = new DirectXCommon();
 	dxCommon->Initialize(winApp_);
 
+	SpriteCommon* spriteCommon = nullptr;
+	spriteCommon = new SpriteCommon();
+	spriteCommon->Initialize(dxCommon);
+
 	//ウインドウを表示する
 	ShowWindow(winApp_->GetHwnd(), SW_SHOW);
 
@@ -360,6 +365,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	graphicsPinpelineStateDesc.DepthStencilState = depthStencilDesc;
 	graphicsPinpelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+	hr = dxCommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPinpelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
+	assert(SUCCEEDED(hr));
+
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResouce = dxCommon->CreateDepthStencilTextureResource(dxCommon->GetDevice(), WinApp::kClientWidth, WinApp::kClientHeight);
 
 	//ここから03_01
@@ -368,11 +377,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dxCommon->GetDevice()->CreateDepthStencilView(depthStencilResouce.Get(), &dsvDesc, dxCommon->GetDSVDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
 	//ここから03_01
-
-
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
-	hr = dxCommon->GetDevice()->CreateGraphicsPipelineState(&graphicsPinpelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
-	assert(SUCCEEDED(hr));
 
 #pragma endregion
 
@@ -619,14 +623,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			dxCommon->InitializeViewportAndScissorRect();
 			dxCommon->InitializeScissorRect();
 
-			//RootSignatureを設定。PSOに設定しているけど別途設定が必要
-			dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
-			dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+			////RootSignatureを設定。PSOに設定しているけど別途設定が必要
+			//dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
+			//dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+
+			spriteCommon->CommonRenderSettings();
 
 			//Sphere
 			dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 			//形状を設定。PSOに設定しているものとはまた別、同じものを設定すると考えておけば良い
-			dxCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			//dxCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			//wvp用のCBufferの場所を設定
 			dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
