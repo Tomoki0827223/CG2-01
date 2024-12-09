@@ -12,13 +12,15 @@ Sprite::~Sprite() {
     if (transformationMatrixResource) transformationMatrixResource->Unmap(0, nullptr);
 }
 
-void Sprite::Initialize(ID3D12Device* device) {
+void Sprite::Initialize(SpriteCommon* spriteCommon) {
+    spriteCommon_ = spriteCommon;
+
     // 頂点データとインデックスデータを作成
-    CreateVertexData(device);
-    CreateIndexData(device);
+    CreateVertexData(spriteCommon->GetDirectXCommon()->GetDevice());
+    CreateIndexData(spriteCommon);
 
     // 座標変換行列データを作成
-    CreateTransformationMatrix(device);
+    CreateTransformationMatrix(spriteCommon->GetDirectXCommon()->GetDevice());
 
     // 頂点バッファビューの設定
     vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
@@ -67,38 +69,37 @@ void Sprite::Update() {
     transformationMatrixData->World = worldMatrix;
 }
 
-void Sprite::Draw(ID3D12GraphicsCommandList* commandList) {
+void Sprite::Draw() {
     // VertexBufferView を設定
-    commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+    spriteCommon_->GetDirectXCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 
     // IndexBufferView を設定
-    commandList->IASetIndexBuffer(&indexBufferView);
+    spriteCommon_->GetDirectXCommon()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 
     // マテリアル CBuffer の場所を設定
     if (materialResource) {
         D3D12_GPU_VIRTUAL_ADDRESS materialAddress = materialResource->GetGPUVirtualAddress();
-        commandList->SetGraphicsRootConstantBufferView(1, materialAddress); // ルートパラメータ 1 にバインド
+        spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, materialAddress); // ルートパラメータ 1 にバインド
     }
 
     // 座標変換行列 CBuffer の場所を設定
     if (transformationMatrixResource) {
         D3D12_GPU_VIRTUAL_ADDRESS transformAddress = transformationMatrixResource->GetGPUVirtualAddress();
-        commandList->SetGraphicsRootConstantBufferView(0, transformAddress); // ルートパラメータ 0 にバインド
+        spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, transformAddress); // ルートパラメータ 0 にバインド
     }
 
     // SRV の Descriptor Table の先頭を設定
-    if (dxCommon_->GetSRVDescriptorHeap()) {
-        CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(dxCommon_->GetSRVDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
-        commandList->SetGraphicsRootDescriptorTable(2, srvHandle); // ルートパラメータ 2 にバインド
+    if (spriteCommon_->GetDirectXCommon()->GetSRVDescriptorHeap()) {
+        CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(spriteCommon_->GetDirectXCommon()->GetSRVDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+        spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, srvHandle); // ルートパラメータ 2 にバインド
     }
 
     // 描画! (DrawCall / ドローコール)
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // トポロジーを設定
-    commandList->DrawIndexedInstanced(6, 1, 0, 0, 0); // 6つのインデックスで 1 インスタンスを描画
+    spriteCommon_->GetDirectXCommon()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // トポロジーを設定
+    spriteCommon_->GetDirectXCommon()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0); // 6つのインデックスで 1 インスタンスを描画
 }
 
-
-void Sprite::CreateVertexData(ID3D12Device* device) {
+void Sprite::CreateVertexData(SpriteCommon* spriteCommon) {
     // 頂点データを定義
     VertexData vertices[] = {
         { { -0.5f,  0.5f, 0.0f, 1.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } },
@@ -121,7 +122,7 @@ void Sprite::CreateVertexData(ID3D12Device* device) {
     resourceDesc.SampleDesc.Count = 1;
     resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-    device->CreateCommittedResource(
+    spriteCommon_->GetDirectXCommon()->CreateCommittedResource(
         &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc,
         D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertexResource)
     );
@@ -131,34 +132,7 @@ void Sprite::CreateVertexData(ID3D12Device* device) {
     vertexResource->Unmap(0, nullptr);
 }
 
-void Sprite::CreateIndexData(ID3D12Device* device) {
-    uint32_t indices[] = { 0, 1, 2, 2, 1, 3 };
-
-    auto indexBufferSize = sizeof(indices);
-
-    D3D12_HEAP_PROPERTIES heapProperties = {};
-    heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-
-    D3D12_RESOURCE_DESC resourceDesc = {};
-    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    resourceDesc.Width = indexBufferSize;
-    resourceDesc.Height = 1;
-    resourceDesc.DepthOrArraySize = 1;
-    resourceDesc.MipLevels = 1;
-    resourceDesc.SampleDesc.Count = 1;
-    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-    device->CreateCommittedResource(
-        &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&indexResource)
-    );
-
-    indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
-    std::memcpy(indexData, indices, indexBufferSize);
-    indexResource->Unmap(0, nullptr);
-}
-
-void Sprite::CreateTransformationMatrix(ID3D12Device* device) {
+void Sprite::CreateTransformationMatrix(SpriteCommon* spriteCommon) {
     // バッファサイズを計算
     auto bufferSize = (sizeof(TransformationMatrix) + 255) & ~255; // 256バイトアラインメント
 
@@ -174,14 +148,11 @@ void Sprite::CreateTransformationMatrix(ID3D12Device* device) {
     resourceDesc.SampleDesc.Count = 1;
     resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-    device->CreateCommittedResource(
+    spriteCommon_->CreateCommittedResource(
         &heapProperties, D3D12_HEAP_FLAG_NONE, &resourceDesc,
         D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&transformationMatrixResource)
     );
 
-    // データマッピング
     transformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
-    transformationMatrixData->WVP = MakeIdentity4x4();
-    transformationMatrixData->World = MakeIdentity4x4();
     transformationMatrixResource->Unmap(0, nullptr);
 }

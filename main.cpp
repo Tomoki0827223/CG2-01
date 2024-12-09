@@ -229,6 +229,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	dxCommon->InitializeImGui();
 	
+	DirectX::ScratchImage mipimage2 = dxCommon->LoadTexture("resources/monsterBall.png");
+	const DirectX::TexMetadata& metadata2 = mipimage2.GetMetadata();
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource2 = dxCommon->CreateTextureResource(dxCommon->GetDevice(), metadata2);
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResources2 = dxCommon->UploadTextureData(textureResource2, mipimage2);
 
     while (true)
     {
@@ -240,6 +244,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
         {
             // GE3
             input->Update();
+			sprite->Update();
 
             // ゲーム処理
 
@@ -317,18 +322,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 			////commandList->DrawInstanced(kSubdivision* kSubdivision * 6, 1, 0, 0);
 
-			//// Spriteの描画。変更が必要なものだけ変更する
-			//dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite); // VBVを設定
-			//dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
-			//// TransformationMatrixCBufferの場所を設定
-			//dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-			//dxCommon->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);// IBVを設定//06_00
-			//dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-			//// 描画！（DrawCall/ドローコール）6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
-			////commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);//06_00
-
-   //         // 描画処理
-   //         // ここにあなたの描画コードを追加します
+			sprite->Draw(dxCommon->GetCommandList().);
 
             // 描画後処理
             dxCommon->PostDraw();
