@@ -16,7 +16,7 @@ public:
 	void CommonRenderSettings();
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> GetRootSignature() { return rootSignature_; }
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> GetGraphicsPipelineState() { return graphicsPipelineState_; }
+	//Microsoft::WRL::ComPtr<ID3D12PipelineState> GetGraphicsPipelineState() { return graphicsPipelineState_; }
 
 	DirectXCommon* GetDirectXCommon() { return dxCommon_; }
 
@@ -26,7 +26,7 @@ private:
 	void graphicsPipelineState();
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_ = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_ = nullptr;
+	//Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_ = nullptr;
 
 	SpriteCommon* spriteCommon = nullptr;
 	DirectXCommon* dxCommon_ = nullptr;

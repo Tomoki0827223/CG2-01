@@ -17,13 +17,14 @@ void SpriteCommon::Initialize(DirectXCommon* dxCommon)
 void SpriteCommon::CommonRenderSettings()
 {
 	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature_.Get());
-	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState_.Get());
+	//dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState_.Get());
 	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void SpriteCommon::CreateRootSignature()
 {
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
+	descriptionRootSignature.NumParameters = 0; // ここに適切な数値を設定
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
@@ -82,6 +83,8 @@ void SpriteCommon::CreateRootSignature()
 
 void SpriteCommon::graphicsPipelineState()
 {
+	CreateRootSignature();
+
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
 	inputElementDescs[0].SemanticName = "POSITION";
 	inputElementDescs[0].SemanticIndex = 0;

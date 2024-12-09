@@ -1,6 +1,7 @@
 #pragma once
 #include <d3d12.h>
 #include "Matrix4x4.h"
+#include "DirectXCommon.h"
 #include <cstdint>
 #include "Vector2.h"
 #include "Vector4.h"
@@ -36,14 +37,19 @@ public:
     ~Sprite();
 
     void Initialize(ID3D12Device* device);
+    void Update();
+    void Draw(ID3D12GraphicsCommandList* commandList);
 
     const D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView() const { return vertexBufferView; }
     const D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView() const { return indexBufferView; }
+
+    DirectXCommon* GetDirectXCommon() { return dxCommon_; }
 
 private:
     // 頂点・インデックスバッファのリソース
     ComPtr<ID3D12Resource> vertexResource;
     ComPtr<ID3D12Resource> indexResource;
+    ComPtr<ID3D12Resource> materialResource;
 
     // 頂点バッファビューとインデックスバッファビュー
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
@@ -62,4 +68,6 @@ private:
     void CreateVertexData(ID3D12Device* device);
     void CreateIndexData(ID3D12Device* device);
     void CreateTransformationMatrix(ID3D12Device* device); // 座標変換行列データ作成
+
+	DirectXCommon* dxCommon_ = nullptr;
 };

@@ -1,6 +1,7 @@
 #include "Sprite.h"
 #include <cstring>
 #include "affine.h"
+#include "externals/DirectXTex/d3dx12.h"
 
 Sprite::Sprite() {}
 
@@ -29,6 +30,73 @@ void Sprite::Initialize(ID3D12Device* device) {
     indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
     indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 }
+
+void Sprite::Update() {
+    // 頂点リソースにデータを書き込む (4点分)
+    VertexData vertices[] = {
+        { { -0.5f,  0.5f, 0.0f, 1.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } },
+        { {  0.5f,  0.5f, 0.0f, 1.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, -1.0f } },
+        { { -0.5f, -0.5f, 0.0f, 1.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, -1.0f } },
+        { {  0.5f, -0.5f, 0.0f, 1.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, -1.0f } }
+    };
+
+    std::memcpy(vertexData, vertices, sizeof(vertices));
+
+    // インデックスリソースにデータを書き込む (6個分)
+    uint32_t indices[] = { 0, 1, 2, 2, 1, 3 };
+    std::memcpy(indexData, indices, sizeof(indices));
+
+    // Transform 情報を作る
+    // (ここでは例として、単位行列を使用しています。必要に応じて変換情報を設定してください)
+    Matrix4x4 worldMatrix = MakeIdentity4x4();
+
+    // ViewMatrix を作って単位行列を代入
+    Matrix4x4 viewMatrix = MakeIdentity4x4();
+
+    // ProjectionMatrix を作って並行投影行列を書き込む
+    Matrix4x4 projectionMatrix = MakeOrthographicMatrix(
+        -1.0f, 1.0f, // 左右
+        -1.0f, 1.0f, // 上下
+        0.0f, 100.0f // ニアクリップとファークリップ
+    );
+
+    // WVP 行列を計算して transformationMatrixData に書き込む
+    transformationMatrixData->WVP = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+
+    // World 行列を transformationMatrixData に書き込む
+    transformationMatrixData->World = worldMatrix;
+}
+
+void Sprite::Draw(ID3D12GraphicsCommandList* commandList) {
+    // VertexBufferView を設定
+    commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+
+    // IndexBufferView を設定
+    commandList->IASetIndexBuffer(&indexBufferView);
+
+    // マテリアル CBuffer の場所を設定
+    if (materialResource) {
+        D3D12_GPU_VIRTUAL_ADDRESS materialAddress = materialResource->GetGPUVirtualAddress();
+        commandList->SetGraphicsRootConstantBufferView(1, materialAddress); // ルートパラメータ 1 にバインド
+    }
+
+    // 座標変換行列 CBuffer の場所を設定
+    if (transformationMatrixResource) {
+        D3D12_GPU_VIRTUAL_ADDRESS transformAddress = transformationMatrixResource->GetGPUVirtualAddress();
+        commandList->SetGraphicsRootConstantBufferView(0, transformAddress); // ルートパラメータ 0 にバインド
+    }
+
+    // SRV の Descriptor Table の先頭を設定
+    if (dxCommon_->GetSRVDescriptorHeap()) {
+        CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(dxCommon_->GetSRVDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+        commandList->SetGraphicsRootDescriptorTable(2, srvHandle); // ルートパラメータ 2 にバインド
+    }
+
+    // 描画! (DrawCall / ドローコール)
+    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // トポロジーを設定
+    commandList->DrawIndexedInstanced(6, 1, 0, 0, 0); // 6つのインデックスで 1 インスタンスを描画
+}
+
 
 void Sprite::CreateVertexData(ID3D12Device* device) {
     // 頂点データを定義
