@@ -10,6 +10,15 @@ Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip
 	return result;
 }
 
+// 単位行列の作成
+Matrix4x4 MakeIdentity4x4() {
+	Matrix4x4 result = {};
+	for (int i = 0; i < 4; ++i) {
+		result.m[i][i] = 1;
+	}
+	return result;
+}
+
 Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
 	Matrix4x4 ans;
 
