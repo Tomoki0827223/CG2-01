@@ -10,6 +10,15 @@
 
 #include "affine.h"
 
+
+struct TransformVector3
+{
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+
+};
+
 Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
 
 Matrix4x4 MakeScaleMatrix(const Vector3& scale);
@@ -43,6 +52,12 @@ Vector3 Cross(const Vector3& a, const Vector3& b);
 Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
 
 Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix);
+
+Matrix4x4 MakeIdentity4x4();
+
+Matrix4x4 MakeRotateXYZMatrix(const Vector3& rotate);
+
+Matrix4x4 CreateWorldMatrix(const TransformVector3& transform);
 
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix);
 
