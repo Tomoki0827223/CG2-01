@@ -82,6 +82,8 @@ void SpriteCommon::CreateRootSignature()
 
 void SpriteCommon::graphicsPipelineState()
 {
+	CreateRootSignature();
+
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
 	inputElementDescs[0].SemanticName = "POSITION";
 	inputElementDescs[0].SemanticIndex = 0;
