@@ -8,7 +8,7 @@ class SpriteCommon
 {
 public:
 
-	~SpriteCommon();
+	///~SpriteCommon();
 
 	void Initialize(DirectXCommon* dxCommon);
 

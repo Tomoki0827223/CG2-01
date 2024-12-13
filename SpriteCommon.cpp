@@ -1,10 +1,5 @@
 #include "SpriteCommon.h"
 
-SpriteCommon::~SpriteCommon()
-{
-	delete spriteCommon;
-}
-
 void SpriteCommon::Initialize(DirectXCommon* dxCommon)
 {
 	dxCommon_ = dxCommon;
