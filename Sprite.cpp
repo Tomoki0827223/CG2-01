@@ -8,7 +8,7 @@ Sprite::~Sprite()
 
 void Sprite::Initialize(SpriteCommon* spriteCommon)
 {
-    
+
 }
 
 void Sprite::Update()
