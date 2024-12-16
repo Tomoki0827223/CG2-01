@@ -10,6 +10,16 @@ Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip
 	return result;
 }
 
+#pragma region 単位行列とTransform
+// 単位行列の作成
+Matrix4x4 MakeIdentity4x4() {
+	Matrix4x4 result = {};
+	for (int i = 0; i < 4; ++i) {
+		result.m[i][i] = 1;
+	}
+	return result;
+}
+
 Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
 	Matrix4x4 ans;
 
@@ -148,6 +158,40 @@ Matrix4x4 MakeRotateZMatrix(float radian) {
 	return ans;
 }
 
+Matrix4x4 MakeRotateXYZMatrix(const Vector3& rotate) {
+	Matrix4x4 result = MakeIdentity4x4();
+	// X軸回転
+	Matrix4x4 rotateX = MakeIdentity4x4();
+	rotateX.m[1][1] = cosf(rotate.x);
+	rotateX.m[1][2] = sinf(rotate.x);
+	rotateX.m[2][1] = -sinf(rotate.x);
+	rotateX.m[2][2] = cosf(rotate.x);
+
+	// Y軸回転
+	Matrix4x4 rotateY = MakeIdentity4x4();
+	rotateY.m[0][0] = cosf(rotate.y);
+	rotateY.m[0][2] = -sinf(rotate.y);
+	rotateY.m[2][0] = sinf(rotate.y);
+	rotateY.m[2][2] = cosf(rotate.y);
+
+	// Z軸回転
+	Matrix4x4 rotateZ = MakeIdentity4x4();
+	rotateZ.m[0][0] = cosf(rotate.z);
+	rotateZ.m[0][1] = sinf(rotate.z);
+	rotateZ.m[1][0] = -sinf(rotate.z);
+	rotateZ.m[1][1] = cosf(rotate.z);
+
+	// 合成
+	result = Multiply(rotateZ, Multiply(rotateY, rotateX));
+	return result;
+}
+
+Matrix4x4 CreateWorldMatrix(const TransformVector3& transform) {
+	Matrix4x4 scaleMatrix = MakeScaleMatrix(transform.scale);
+	Matrix4x4 rotationMatrix = MakeRotateXYZMatrix(transform.rotate);
+	Matrix4x4 translationMatrix = MakeTranslateMatrix(transform.translate);
+	return Multiply(translationMatrix, Multiply(rotationMatrix, scaleMatrix));
+}
 
 Matrix4x4 Add(const Matrix4x4& mt1, const Matrix4x4& mt2) {
 

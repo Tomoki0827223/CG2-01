@@ -10,7 +10,17 @@
 
 #include "affine.h"
 
+struct TransformVector3
+{
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+
+};
+
 Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
+
+Matrix4x4 MakeIdentity4x4();
 
 Matrix4x4 MakeScaleMatrix(const Vector3& scale);
 Matrix4x4 MakeTranslateMatrix(const Vector3& translate);
@@ -21,6 +31,9 @@ Matrix4x4 MakeRotateYMatrix(float radian);
 
 Matrix4x4 MakeRotateZMatrix(float radian);
 
+Matrix4x4 MakeRotateXYZMatrix(const Vector3& rotate);
+
+Matrix4x4 CreateWorldMatrix(const TransformVector3& transform);
 
 Matrix4x4 Add(const Matrix4x4& mt1, const Matrix4x4& mt2);
 
