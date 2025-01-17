@@ -390,12 +390,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
             // ゲーム処理
 
-            // 描画前処理
-            dxCommon->PreDraw();
-
-			spriteCommon->CommandListCreate();
-			
-			sprite->Draw();
 
 
 			transform.rotate.y += 0.0f;
@@ -437,13 +431,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// ImGuiの描画
 			ImGui::Render();
+
+
+			// 描画前処理
+			dxCommon->PreDraw();
+
+			spriteCommon->CommandListCreate();
+
+			sprite->Draw();
+
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
 
 			//dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
 			//dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 
-			dxCommon->InitializeViewportAndScissorRect();
-			dxCommon->InitializeScissorRect();
 
 
 			////Sphere
