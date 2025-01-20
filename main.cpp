@@ -253,6 +253,11 @@ struct DirectionaLight
 	float intensity;
 };
 
+struct CameraForGPU
+{
+	Vector3 WorldPosition;
+};
+
 #pragma endregion
 
 #pragma region Textureデータ読み込み
