@@ -148,6 +148,15 @@ Matrix4x4 MakeRotateZMatrix(float radian) {
 	return ans;
 }
 
+#pragma region 単位行列とTransform
+// 単位行列の作成
+Matrix4x4 MakeIdentity4x4() {
+	Matrix4x4 result = {};
+	for (int i = 0; i < 4; ++i) {
+		result.m[i][i] = 1;
+	}
+	return result;
+}
 
 Matrix4x4 Add(const Matrix4x4& mt1, const Matrix4x4& mt2) {
 
