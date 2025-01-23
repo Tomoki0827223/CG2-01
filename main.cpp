@@ -1055,6 +1055,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialDataSprite->color = { 1.0f,1.0f,1.0f,1.0f };
 	materialDataSprite->endleLighting = false;
 	
+
 	//ライティング
 	ID3D12Resource* directionalLightResorce = CreateBufferResource(device, sizeof(DirectionaLight));
 	DirectionaLight* directionalLightData = nullptr;
