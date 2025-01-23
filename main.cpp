@@ -10,6 +10,7 @@
 #include <d3d11.h>
 #include <vector>
 #include <numbers>
+#include <cstdint>
 
 #include "externals/DirectXTex/DirectXTex.h"
 
@@ -237,6 +238,7 @@ struct Material
 {
 	Vector4 color;
 	int32_t endleLighting;
+	float shininess;
 };
 
 struct TransformationMatrix
@@ -251,6 +253,11 @@ struct DirectionaLight
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
+};
+
+struct CameraForGPU
+{
+	Vector3 worldPosition;
 };
 
 #pragma endregion
@@ -667,7 +674,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	//RootParameter作成。複数設定できるので配列。今回は結果は1つだけなので長さ１の配列
-	D3D12_ROOT_PARAMETER rootParameters[4] = {};
+	D3D12_ROOT_PARAMETER rootParameters[5] = {};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[0].Descriptor.ShaderRegister = 0;
@@ -684,6 +691,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters[3].Descriptor.ShaderRegister = 1;
+
+	// ルートパラメータに追加
+	rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;  // CBVを使う
+	rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;  // PixelShaderで使う
+	rootParameters[4].Descriptor.ShaderRegister = 2;  // レジスタ番号2を使う
+
 	
 	descriptionRootSignature.pParameters = rootParameters;
 	descriptionRootSignature.NumParameters = _countof(rootParameters);
@@ -1032,6 +1045,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	////こここで色かえられるよ
 	materialData->color = { 1.0f,1.0f,1.0f,1.0f };
 	materialData->endleLighting = true;
+	materialData->shininess = { 70.0f }; // 初期値を設定
+
 
 	//Sprite用のマテリアルリソースを作る
 	ID3D12Resource* materialResourceSprite = CreateBufferResource(device, sizeof(Material));
@@ -1045,8 +1060,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DirectionaLight* directionalLightData = nullptr;
 	directionalLightResorce->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
-	directionalLightData->direction = { 0.0f,-1.0f,0.0f };
+	directionalLightData->direction = { -0.4f,-1.0f,0.6f };
 	directionalLightData->intensity = 1.0f;
+
+	// カメラ用のリソースを作る。
+	ID3D12Resource* cameraResource = CreateBufferResource(device, sizeof(CameraForGPU));
+	// マテリアルにデータを書き込む 
+	CameraForGPU* cameraData = nullptr;
+	// 書き込むためのアドレスを取得 
+	cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData));
+	
+	cameraData->worldPosition = { 0.0f,0.0f,-10.0f };
+	//は指定したカメラ位置にする
+
 
 	bool useMonsterBall = true;
 
@@ -1082,7 +1108,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			wvpDeta->world = worldMatrix;
 			wvpDeta->WVP = worldViewProjectionMatrix;
 
-
 			// Sprite用のWorldViewProjectionMatrixを作る
 			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
@@ -1090,8 +1115,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
 			transformationMatrixDataSprite->world = worldMatrixSprite;
 			transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
-
-
 
 			//これから書き込むバッファのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -1108,29 +1131,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::SliderFloat3("Position", &transform.translate.x, -5.0f, 5.0f);
 			ImGui::SliderFloat3("Rotation", &transform.rotate.x, -180.0f, 180.0f);
 			ImGui::SliderFloat3("Scale", &transform.scale.x, 0.1f, 2.0f);
+			ImGui::SliderFloat("Shininess", &materialData->shininess, 0.0f, 100.0f);
 			ImGui::SliderFloat("MonsterBallsc", &w, 0.1f, 2.0f);
 			ImGui::Checkbox("useMonsterball", &useMonsterBall);
 			ImGui::End();
 
-			ImGui::Render();
+			// ライトの向きを操作するスライダーを追加
+			ImGui::Begin("Light Controls");
+			ImGui::SliderFloat3("Light Direction", &directionalLightData->direction.x, -1.0f, 1.0f);
+			ImGui::End();
 
+			ImGui::Render();
 
 			D3D12_RESOURCE_BARRIER barrier{};
 
 			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-
 			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-
 			barrier.Transition.pResource = swapChainResource[backBufferIndex];
-
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
-
-
 			commandList->ResourceBarrier(1, &barrier);
-
 
 			//描画先のRTVを設定する
 			commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
@@ -1173,8 +1194,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResorce->GetGPUVirtualAddress());
+
+			// cameraのCBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
+
 			// 描画！（DrawCall/ドローコール）
-			commandList->DrawInstanced(6, 1, 0, 0);
+			//commandList->DrawInstanced(6, 1, 0, 0);
 
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			//実際のcommandListのImGuiの描画コマンドを積む
@@ -1187,35 +1212,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			hr = commandList->Close();
 			assert(SUCCEEDED(hr));
 
-
 			//GPUにコマンドリストの実行を行わせる
 			ID3D12CommandList* commandLists[] = { commandList };
 			commandQueue->ExecuteCommandLists(1, commandLists);
 			//　GPUとOSに画面の交換を行うように通知する
 			swapChain->Present(1, 0);
 
-
 			fenceValue++;
 			commandQueue->Signal(fence, fenceValue);
 
 			if (fence->GetCompletedValue() < fenceValue) {
-
 				fence->SetEventOnCompletion(fenceValue, fenceEvent);
-
 				WaitForSingleObject(fenceEvent, INFINITE);
-
 			}
-
 
 			//次のフレーム用のコマンドリストを準備
 			hr = commandAllocator->Reset();
 			assert(SUCCEEDED(hr));
 			hr = commandList->Reset(commandAllocator, nullptr);
 			assert(SUCCEEDED(hr));
-
-
 		}
 	}
+
 
 #pragma region 解放処理
 	ImGui_ImplDX12_Shutdown();
@@ -1226,6 +1244,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	intermediateResources->Release();
 	intermediateResources2->Release();
 
+	cameraResource->Release();
 	materialResource->Release();
 	vertexResource->Release();
 	depthStencilResouce->Release();
