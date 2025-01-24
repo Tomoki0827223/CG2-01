@@ -49,12 +49,12 @@ PixelShaderOutput main(VertexShanderOutput input)
         //output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
         
         // 拡散反射
-        float3 diffuse =
+        float32_t3 diffuse =
         gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
         
         // 鏡面反射
-        float3 specular =
-        gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float3(1.0f, 1.0f, 1.0f);
+        float32_t3 specular =
+        gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float32_t3(1.0f, 1.0f, 1.0f);
         //拡散反射・鏡面反射
         output.color.rgb = diffuse + specular;
         //アルファは今まで通り

@@ -39,8 +39,11 @@ Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float botto
 Vector3 Cross(const Vector3& a, const Vector3& b);
 
 
+
 //ビューポート変換行列
 Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
+
+Vector3 Normalize(const Vector3& v);
 
 Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix);
 
