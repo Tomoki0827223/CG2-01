@@ -131,11 +131,11 @@ void Sprite::SetTexture(ID3D12Resource* texture, D3D12_GPU_DESCRIPTOR_HANDLE srv
 
 void Sprite::Update()
 {
-	//頂点リソースにデータを書き込む(４点分)
-    vertexData_[0].position = Vector4(-0.5f, 0.5f, 0.0f, 1.0f);
-    vertexData_[1].position = Vector4(0.5f, 0.5f, 0.0f, 1.0f);
-    vertexData_[2].position = Vector4(-0.5f, -0.5f, 0.0f, 1.0f);
-    vertexData_[3].position = Vector4(0.5f, -0.5f, 0.0f, 1.0f);
+	//頂点データを書き込む
+    vertexData_[0].position = Vector4(-0.5f, 0.5f, 0.0f, 1.0f); // 左上
+    vertexData_[1].position = Vector4(0.5f, 0.5f, 0.0f, 1.0f);  // 右上
+    vertexData_[2].position = Vector4(-0.5f, -0.5f, 0.0f, 1.0f); // 左下
+    vertexData_[3].position = Vector4(0.5f, -0.5f, 0.0f, 1.0f);  // 右下
 
 	//インデックスリソースにデータを書き込む(六個分)
 	indexData_[0] = 0;
@@ -163,14 +163,24 @@ void Sprite::Update()
     transformationMatrixData_->world = worldMatrix;
 }
 
+
 void Sprite::Draw() {
     ID3D12GraphicsCommandList* commandList = spriteCommon_->GetDXCommon()->GetCommandList();
+
+    // 頂点バッファとインデックスバッファの設定
     commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
     commandList->IASetIndexBuffer(&indexBufferView_);
+
+    // プリミティブのタイプを設定
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // マテリアルバッファと変換行列バッファの設定
     commandList->SetGraphicsRootConstantBufferView(0, materialBuffer_->GetGPUVirtualAddress());
     commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixBuffer_->GetGPUVirtualAddress());
+
+    // シェーダーリソースビュー (テクスチャ)
     commandList->SetGraphicsRootDescriptorTable(2, srvHandle_);
+
+    // 描画コマンド
     commandList->DrawIndexedInstanced(indexCount_, 1, 0, 0, 0);
 }
-

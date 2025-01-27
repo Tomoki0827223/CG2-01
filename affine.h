@@ -33,6 +33,8 @@ Matrix4x4 Inverse(const Matrix4x4& m);
 
 Matrix4x4 Transpose(const Matrix4x4& mt1);
 
+float Dot(const Vector3& a, const Vector3& b);
+
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate);
 
 Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
@@ -42,6 +44,12 @@ Vector3 Cross(const Vector3& a, const Vector3& b);
 
 //ビューポート変換行列
 Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
+
+Matrix4x4 MakeLookAtMatrix(const Vector3& eye, const Vector3& target, const Vector3& up);
+
+Vector3 Normalize(const Vector3& vector);
+
+Matrix4x4 MakePerspectiveMatrix(float fovY, float aspect, float nearZ, float farZ);
 
 Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix);
 

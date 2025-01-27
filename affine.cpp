@@ -339,6 +339,43 @@ Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, f
 	return result;
 }
 
+float Dot(const Vector3& a, const Vector3& b) {
+	return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+Matrix4x4 MakeLookAtMatrix(const Vector3& eye, const Vector3& target, const Vector3& up) {
+	Vector3 zaxis = Normalize(target - eye);
+	Vector3 xaxis = Normalize(Cross(up, zaxis));
+	Vector3 yaxis = Cross(zaxis, xaxis);
+
+	Matrix4x4 viewMatrix = {
+		xaxis.x, yaxis.x, zaxis.x, 0,
+		xaxis.y, yaxis.y, zaxis.y, 0,
+		xaxis.z, yaxis.z, zaxis.z, 0,
+		-Dot(xaxis, eye), -Dot(yaxis, eye), -Dot(zaxis, eye), 1
+	};
+
+	return viewMatrix;
+}
+
+Vector3 Normalize(const Vector3& vector) {
+	float length = std::sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+	assert(length != 0.0f);
+	return vector / length;
+}
+
+Matrix4x4 MakePerspectiveMatrix(float fovY, float aspect, float nearZ, float farZ) {
+	float yScale = 1.0f / tan(fovY / 2.0f);
+	float xScale = yScale / aspect;
+	Matrix4x4 m;
+	m.m[0][0] = xScale;
+	m.m[1][1] = yScale;
+	m.m[2][2] = farZ / (farZ - nearZ);
+	m.m[2][3] = 1.0f;
+	m.m[3][2] = -nearZ * farZ / (farZ - nearZ);
+	m.m[3][3] = 0.0f;
+	return m;
+}
 
 Vector3 Transform(const Vector3& vector, const Matrix4x4& matrix) {
 	Vector3 result;
