@@ -34,6 +34,7 @@ class Sprite
 public:
 
 	void Initialize(SpriteCommon* spriteCommon);
+	void SetTexture(ID3D12Resource* texture, D3D12_GPU_DESCRIPTOR_HANDLE srvHandle);
 	void Update();
 	void Draw();
 
@@ -65,6 +66,9 @@ private:
 
 	uint32_t vertexCount_ = 4;
 	uint32_t indexCount_ = 6;
+
+	ID3D12Resource* texture_ = nullptr;
+	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle_ = {};
 
 };
 

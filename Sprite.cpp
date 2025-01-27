@@ -123,6 +123,12 @@ void Sprite::Initialize(SpriteCommon* spriteCommon)
 
 }
 
+void Sprite::SetTexture(ID3D12Resource* texture, D3D12_GPU_DESCRIPTOR_HANDLE srvHandle) {
+    texture_ = texture;
+    srvHandle_ = srvHandle;
+}
+
+
 void Sprite::Update()
 {
 	//頂点リソースにデータを書き込む(４点分)
@@ -157,20 +163,14 @@ void Sprite::Update()
     transformationMatrixData_->world = worldMatrix;
 }
 
-void Sprite::Draw()
-{
-	//コマンドリストを取得
-	ID3D12GraphicsCommandList* commandList = spriteCommon_->GetDXCommon()->GetCommandList();
-	//頂点バッファーをセット
-	commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
-	//インデックスバッファーをセット
-	commandList->IASetIndexBuffer(&indexBufferView_);
-	//プリミティブトポロジーを設定
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//マテリアルリソースをセット
-	commandList->SetGraphicsRootConstantBufferView(0, materialBuffer_->GetGPUVirtualAddress());
-	//座標変換行列リソースをセット
-	commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixBuffer_->GetGPUVirtualAddress());
-	//描画
-	commandList->DrawIndexedInstanced(indexCount_, 1, 0, 0, 0);
+void Sprite::Draw() {
+    ID3D12GraphicsCommandList* commandList = spriteCommon_->GetDXCommon()->GetCommandList();
+    commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
+    commandList->IASetIndexBuffer(&indexBufferView_);
+    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    commandList->SetGraphicsRootConstantBufferView(0, materialBuffer_->GetGPUVirtualAddress());
+    commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixBuffer_->GetGPUVirtualAddress());
+    commandList->SetGraphicsRootDescriptorTable(2, srvHandle_);
+    commandList->DrawIndexedInstanced(indexCount_, 1, 0, 0, 0);
 }
+
