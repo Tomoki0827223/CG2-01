@@ -126,6 +126,13 @@ void Sprite::Initialize(SpriteCommon* spriteCommon)
 void Sprite::SetTexture(ID3D12Resource* texture, D3D12_GPU_DESCRIPTOR_HANDLE srvHandle) {
     texture_ = texture;
     srvHandle_ = srvHandle;
+    // デバッグ出力
+    if (texture_) {
+        OutputDebugStringA("Texture set successfully.\n");
+    }
+    else {
+        OutputDebugStringA("Failed to set texture.\n");
+    }
 }
 
 
@@ -180,6 +187,9 @@ void Sprite::Draw() {
 
     // シェーダーリソースビュー (テクスチャ)
     commandList->SetGraphicsRootDescriptorTable(2, srvHandle_);
+
+    // デバッグ出力
+    OutputDebugStringA("Drawing sprite.\n");
 
     // 描画コマンド
     commandList->DrawIndexedInstanced(indexCount_, 1, 0, 0, 0);
