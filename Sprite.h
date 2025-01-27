@@ -63,8 +63,8 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView_;
 
-	uint32_t vertexCount_ = 0;
-	uint32_t indexCount_ = 0;
+	uint32_t vertexCount_ = 4;
+	uint32_t indexCount_ = 6;
 
 };
 
