@@ -138,11 +138,21 @@ void Sprite::SetTexture(ID3D12Resource* texture, D3D12_GPU_DESCRIPTOR_HANDLE srv
 
 void Sprite::Update()
 {
-	//頂点データを書き込む
-    vertexData_[0].position = Vector4(-0.5f, 0.5f, 0.0f, 1.0f); // 左上
-    vertexData_[1].position = Vector4(0.5f, 0.5f, 0.0f, 1.0f);  // 右上
-    vertexData_[2].position = Vector4(-0.5f, -0.5f, 0.0f, 1.0f); // 左下
-    vertexData_[3].position = Vector4(0.5f, -0.5f, 0.0f, 1.0f);  // 右下
+    // 1枚目の三角形
+    vertexData_[0].position = { 0.0f, 360.0f, 0.0f, 1.0f };// 左下
+    vertexData_[0].texcoord = { 0.0f, 1.0f };
+    vertexData_[0].normal = { 0.0f, 0.0f, -1.0f };
+    vertexData_[1].position = { 0.0f, 0.0f, 0.0f, 1.0f };// 左上
+    vertexData_[1].texcoord = { 0.0f,0.0f };
+    vertexData_[1].normal = { 0.0f, 0.0f, -1.0f };
+    vertexData_[2].position = { 640.0f, 360.0f, 0.0f, 1.0f };// 右下
+    vertexData_[2].texcoord = { 1.0f, 1.0f };
+    vertexData_[2].normal = { 0.0f, 0.0f, -1.0f };
+
+    // 2枚目の三角形
+    vertexData_[3].position = { 640.0f, 0.0f, 0.0f, 1.0f };// 右上
+    vertexData_[3].texcoord = { 1.0f, 0.0f };
+    vertexData_[3].normal = { 0.0f, 0.0f, -1.0f };
 
 	//インデックスリソースにデータを書き込む(六個分)
 	indexData_[0] = 0;
