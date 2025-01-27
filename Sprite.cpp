@@ -154,6 +154,10 @@ void Sprite::Update()
     vertexData_[3].texcoord = { 1.0f, 0.0f };
     vertexData_[3].normal = { 0.0f, 0.0f, -1.0f };
 
+    TransformVector3 transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+    TransformVector3 cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
+    Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+
 	//インデックスリソースにデータを書き込む(六個分)
 	indexData_[0] = 0;
 	indexData_[1] = 1;
