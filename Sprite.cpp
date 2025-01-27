@@ -166,8 +166,6 @@ void Sprite::Update()
 	indexData_[4] = 3;
 	indexData_[5] = 2;
 
-    //Transform情報を作る
-	Matrix4x4 worldMatrix = MakeIdentity4x4();
 	Matrix4x4 view = MakeIdentity4x4();
 	Matrix4x4 projection = MakeIdentity4x4();
     Matrix4x4 wvp = Multiply(worldMatrix, Multiply(view, projection));

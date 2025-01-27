@@ -29,6 +29,14 @@ struct TransfomaitionMatrix
 	Matrix4x4 world;
 };
 
+struct TransformVector3
+{
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+
+};
+
 class Sprite
 {
 public:
