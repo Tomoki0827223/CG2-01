@@ -198,7 +198,7 @@ void Sprite::Draw() {
     commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixBuffer_->GetGPUVirtualAddress());
 
     // シェーダーリソースビュー (テクスチャ)
-    commandList->SetGraphicsRootDescriptorTable(2, srvHandle_);
+    //commandList->SetGraphicsRootDescriptorTable(2, srvHandle_);
 
     // デバッグ出力
     OutputDebugStringA("Drawing sprite.\n");

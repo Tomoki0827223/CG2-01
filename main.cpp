@@ -196,13 +196,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// デバッグ出力
 	OutputDebugStringA("Shader Resource View created.\n");
 
-	TransformVector3 transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-	//TransformationMatrixResource
-	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(TransformationMatrix));
-	TransformationMatrix* transformationMatrixDataSprite = nullptr;
-	transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite));
-	transformationMatrixDataSprite->WVP = MakeIdentity4x4();
-	transformationMatrixDataSprite->world = MakeIdentity4x4();
+	//TransformVector3 transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	////TransformationMatrixResource
+	//ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(TransformationMatrix));
+	//TransformationMatrix* transformationMatrixDataSprite = nullptr;
+	//transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite));
+	//transformationMatrixDataSprite->WVP = MakeIdentity4x4();
+	//transformationMatrixDataSprite->world = MakeIdentity4x4();
 
 	MSG msg{};
 
@@ -219,13 +219,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
         {
 
 
-			// Sprite用のWorldViewProjectionMatrixを作る
-			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
-			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(winApp_->kClientWidth), float(winApp_->kClientHeight), 0.0f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
-			transformationMatrixDataSprite->world = worldMatrixSprite;
-			transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
+			//// Sprite用のWorldViewProjectionMatrixを作る
+			//Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+			//Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
+			//Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(winApp_->kClientWidth), float(winApp_->kClientHeight), 0.0f, 100.0f);
+			//Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
+			//transformationMatrixDataSprite->world = worldMatrixSprite;
+			//transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
 
             // GE3
             input->Update();
