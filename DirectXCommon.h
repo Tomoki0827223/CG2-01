@@ -160,10 +160,10 @@ private:
     uint32_t descriptorSizeDSV = 0;
 
     //DXCの初期化
-    IDxcUtils* dxcUtils = nullptr;
-    IDxcCompiler3* dxcCompiler = nullptr;
+    Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils = nullptr;
+    Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
     //include対応のため設定しておく
-    IDxcIncludeHandler* includeHandler = nullptr;
+    Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
 
     //フェンスの生成
     Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
