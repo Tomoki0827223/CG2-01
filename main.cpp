@@ -203,7 +203,7 @@ ModelData LoaObjFile(const std::string& directoryPath, const std::string& filena
 }
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-	//D3DResourceLeakChecker LeakCheak;
+	D3DResourceLeakChecker LeakCheak;
 
 	WinApp* winApp_ = nullptr;
 	winApp_ = new WinApp();
