@@ -24,7 +24,9 @@
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="StringUitilty.cpp" />
+    <ClCompile Include="TitleScene.cpp" />
     <ClCompile Include="WinApp.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -43,7 +45,10 @@
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Matrix4x4.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="StringUitilty.h" />
+    <ClInclude Include="TitleScene.h" />
+    <ClInclude Include="Transform1.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Vector4.h" />
     <ClInclude Include="Vector2.h" />

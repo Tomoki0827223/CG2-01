@@ -10,12 +10,15 @@
 #include "Vector3.h"
 #include "Vector4.h"
 #include "Matrix4x4.h"
+#include "Transform1.h"
 #include <fstream>
 #include <sstream>
 #include <cassert>
 #include <vector>
 #include <string>
 #include "affine.h"
+#include "Scene.h"
+#include "TitleScene.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
 
@@ -29,13 +32,13 @@ Matrix4x4 MakeIdentity4x4() {
 	return result;
 }
 
-struct TransformVector3
-{
-	Vector3 scale;
-	Vector3 rotate;
-	Vector3 translate;
-
-};
+//struct TransformVector3
+//{
+//	Vector3 scale;
+//	Vector3 rotate;
+//	Vector3 translate;
+//
+//};
 
 struct VertexData {
 	Vector4 position;
@@ -63,12 +66,6 @@ struct DirectionaLight
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
-};
-
-struct Transform1 {
-	Vector3 scale;
-	Vector3 rotate;
-	Vector3 translate;
 };
 
 Transform1 uvTransformSprite{
@@ -223,6 +220,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//ウインドウを表示する
 	ShowWindow(winApp_->GetHwnd(), SW_SHOW);
+
+	// シーンマネージャーの初期化
+	Scene sceneManager;
+	TitleScene titleScene;
+
+	sceneManager.SetState(&titleScene);
 
 #pragma endregion
 
@@ -389,7 +392,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	bool useMonsterBall = false;
 
-	TransformVector3 transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	Transform1 transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 	//Resourcef
 	const uint32_t kSubdivision = 36;
@@ -505,8 +508,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexDataSprite[3].texcoord = { 1.0f, 0.0f };
 	vertexDataSprite[3].nomal = { 0.0f, 0.0f, -1.0f };
 
-	TransformVector3 transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-	TransformVector3 cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
+	Transform1 transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	Transform1 cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 
 	dxCommon->GetCPUDescriptorHandle(dxCommon->GetRTVDescriptorHeap(), dxCommon->GetDescriptorSizeRTV(), 0);
@@ -563,13 +566,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
         {
             // GE3
             input->Update();
-
-            // ゲーム処理
-
             // 描画前処理
             dxCommon->PreDraw();
 
-			transform.rotate.y -= 0.05f;
+			sceneManager.Update(transform);
+
+			//transform.rotate.y -= 0.05f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
