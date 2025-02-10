@@ -13,8 +13,10 @@
 
 class DirectXCommon
 {
+
 public:
 
+    ~DirectXCommon();
 
 	void Initialize(WinApp* winApp);
 

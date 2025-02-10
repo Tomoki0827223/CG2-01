@@ -14,6 +14,19 @@
 
 using namespace Microsoft::WRL;
 
+DirectXCommon::~DirectXCommon() {
+	// ImGuiの終了処理
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+
+	// フェンスイベントの解放
+	if (fenceEvent) {
+		CloseHandle(fenceEvent);
+		fenceEvent = nullptr;
+	}
+}
+
 
 void DirectXCommon::Initialize(WinApp* winApp) {
 	// NULL検出
@@ -46,7 +59,7 @@ void DirectXCommon::Initialize(WinApp* winApp) {
 	// DXCコンパイラの生成
 	CreateDXCCompiler();
 	// ImGuiの初期化
-	//InitializeImGui();
+	InitializeImGui();
 }
 
 void DirectXCommon::CreateDevice()
@@ -62,7 +75,9 @@ void DirectXCommon::CreateDevice()
 
 	}
 
-#endif
+#endif // DEBUG
+
+
 
 #pragma region DXGIFactryの生成
 

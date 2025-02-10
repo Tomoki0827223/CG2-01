@@ -552,9 +552,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	MSG msg{};
 
-
-	dxCommon->InitializeImGui();
-
     while (true)
     {
         if (winApp_->ProsessMeassage())
@@ -571,7 +568,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
             // 描画前処理
             dxCommon->PreDraw();
 
-			transform.rotate.y += 0.0f;
+			transform.rotate.y -= 0.05f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
