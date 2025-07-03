@@ -21,6 +21,8 @@ Matrix4x4 MakeRotateYMatrix(float radian);
 
 Matrix4x4 MakeRotateZMatrix(float radian);
 
+// 4x4単位行列を返す
+Matrix4x4 MakeIdentity4x4();
 
 Matrix4x4 Add(const Matrix4x4& mt1, const Matrix4x4& mt2);
 
