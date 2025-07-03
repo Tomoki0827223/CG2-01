@@ -7,6 +7,7 @@
 #include "Vector3.h"
 #include "Matrix4x4.h"
 #include "affine.h"
+#include "TextureManager.h"
 
 // 前方宣言
 class SpriteCommon;
@@ -37,9 +38,11 @@ class Sprite
 {
 public:
 
-    void Initialize(SpriteCommon* spriteCommon);
+    void Initialize(SpriteCommon* spriteCommon, std::string textureFilePath);
     void Update(); // ←追加
     void Draw();   // ←追加
+	
+    uint32_t textureIndex = 0; // インデックスの数
 
 private:
     // 共通部
@@ -75,5 +78,6 @@ private:
 
     // 座標変換行列データ作成（初期化用のprivate関数）
     void CreateTransformationMatrixData();
+
 
 };

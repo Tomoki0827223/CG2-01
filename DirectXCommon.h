@@ -115,6 +115,9 @@ public:
 	/// 深度ステンシルテクスチャリソースの生成
     /// 
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height);
+    
+    // 最大SRV数（最大テクスチャ枚数）
+    static const uint32_t kMaxSRVCount;
 
 private:
 

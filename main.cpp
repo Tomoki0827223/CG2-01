@@ -6,6 +6,7 @@
 #include "DirectXCommon.h"
 #include "SpriteCommon.h"
 #include "Sprite.h"
+#include "TextureManager.h"
 #include "D3DResourceLeakChecker.h"
 #include "Input.h"
 #include "Vector2.h"
@@ -193,13 +194,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dxCommon = new DirectXCommon();
 	dxCommon->Initialize(winApp_);
 
+	// TextureManagerの初期化
+	TextureManager::GetInstance()->Initialize();
+
 	SpriteCommon* spriteCommon = nullptr;
 	spriteCommon = new SpriteCommon();
 	spriteCommon->Initialize(dxCommon);
 
 	// Spriteの生成
 	Sprite* sprite = new Sprite();
-	sprite->Initialize(spriteCommon);
+	sprite->Initialize(spriteCommon, sprite->textureIndex);
 
 	//ウインドウを表示する
 	ShowWindow(winApp_->GetHwnd(), SW_SHOW);
@@ -336,6 +340,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//Windows終了
 	winApp_->Finalize();
+
+	// TextureManagerの終了
+	TextureManager::GetInstance()->Finalize();
 
 	delete input;
 	delete winApp_;
