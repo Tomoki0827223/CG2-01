@@ -28,18 +28,21 @@ private:
     TextureManager(const TextureManager&) = delete;
     TextureManager& operator=(const TextureManager&) = delete;
 
+
+    // SRVインデックスの開始番号
+    static uint32_t kSRVIndexTop;
+
+public:
+
     /// <summary>
     /// テクスチャファイルの読み込み
     /// </summary>
     /// <param name="filePath">テクスチャファイルのパス</param>
     void LoadTexture(const std::string& filePath);
 
-    // SRVインデックスの開始番号
-    static uint32_t kSRVIndexTop;
+    [[nodiscard]]
+    Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource> texture, const DirectX::ScratchImage& mipImages);
 
-
-
-public:
     
     // テクスチャ番号からGPUハンドルを取得
     D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureIndex);

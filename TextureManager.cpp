@@ -1,5 +1,6 @@
 #include "TextureManager.h"
 #include "DirectXCommon.h" // kMaxSRVCount を使うため
+#include "externals/DirectXTex/d3dx12.h"
 
 TextureManager* TextureManager::instance = nullptr;
 // ImGuiで0番を使用するため、1番から使用
@@ -76,8 +77,10 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 
     DirectX::TexMetadata metadata;
     DirectX::ScratchImage image;
+    // 修正後
+    std::wstring filePathW(filePath.begin(), filePath.end());
     HRESULT hr = DirectX::LoadFromWICFile(
-        filePath, // const wchar_t*
+        filePathW.c_str(),
         DirectX::WIC_FLAGS_NONE,
         &metadata,
         image
@@ -85,10 +88,11 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 
     // MipMapの作成
     DirectX::ScratchImage mipImages{};
-    DirectX::GenerateMipMaps(
+    hr = DirectX::GenerateMipMaps(
         image.GetImages(), image.GetImageCount(), image.GetMetadata(),
         DirectX::TEX_FILTER_DEFAULT, 0, mipImages
     );
+    assert(SUCCEEDED(hr));
 
     // DirectXCommonのインスタンス取得（シングルトン等で取得する想定）
     extern DirectXCommon* dxCommon; // グローバル変数として宣言されている場合
@@ -119,4 +123,58 @@ void TextureManager::LoadTexture(const std::string& filePath) {
         &srvDesc,
         textureData.srvHandleCPU
     );
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> TextureManager::UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource> texture, const DirectX::ScratchImage& mipImages)
+{
+    std::vector<D3D12_SUBRESOURCE_DATA> subresources;
+    DirectX::PrepareUpload(
+        device.Get(),
+        mipImages.GetImages(),
+        mipImages.GetImageCount(),
+        mipImages.GetMetadata(),
+        subresources);
+
+    uint64_t intermediateSize = GetRequiredIntermediateSize(
+        texture.Get(), 0, static_cast<UINT>(subresources.size()));
+    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = CreateBufferResource(intermediateSize);
+
+    UpdateSubresources(
+        commandList.Get(),
+        texture.Get(),
+        intermediateResource.Get(),
+        0, 0,
+        static_cast<UINT>(subresources.size()),
+        subresources.data());
+
+    // ResourceBarrierで状態遷移
+    D3D12_RESOURCE_BARRIER barrier{};
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    barrier.Transition.pResource = texture.Get();
+    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
+    commandList->ResourceBarrier(1, &barrier);
+
+    // コマンドリストをクローズ
+    commandList->Close();
+
+    // コマンドリストを実行
+    ID3D12CommandList* ppCommandLists[] = { commandList.Get() };
+    commandQueue->ExecuteCommandLists(1, ppCommandLists);
+
+    // フェンスでGPUの完了を待つ
+    const UINT64 fenceValue = 1;
+    fence->SetEventOnCompletion(fenceValue, nullptr);
+    commandQueue->Signal(fence.Get(), fenceValue);
+    while (fence->GetCompletedValue() < fenceValue) {
+        // 簡易的なスピンロック。実際はイベントで待つのが望ましい
+    }
+
+    // コマンドリストをリセット（次回のため）
+    commandAllocator->Reset();
+    commandList->Reset(commandAllocator.Get(), nullptr);
+
+    return intermediateResource;
 }
