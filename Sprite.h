@@ -75,5 +75,4 @@ private:
 
     // 座標変換行列データ作成（初期化用のprivate関数）
     void CreateTransformationMatrixData();
-
 };

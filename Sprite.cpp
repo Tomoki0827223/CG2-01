@@ -116,7 +116,7 @@ void Sprite::Update()
     // 例: ここではY座標をアニメーションさせる
     float time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count()) * 0.001f;
-    float offsetY = std::sin(time) * 0.1f; // 上下に0.1動かす
+    float offsetY = std::sin(time) * 0.0f; // 上下に0.1動かす
 
     vertexData[0].position.y = 0.5f + offsetY;  // 左上
     vertexData[1].position.y = 0.5f + offsetY;  // 右上
@@ -135,6 +135,10 @@ void Sprite::Update()
     // Transform情報を作る
     Matrix4x4 worldMatrix = MakeIdentity4x4();
     // ここで平行移動や回転などを合成する場合は行列を掛け合わせてworldMatrixを作る
+
+    // 例：左上に移動（NDC座標系で -1,+1 が左上）
+    // スプライトのサイズがNDCで1.0fの場合、左上に表示するには
+    worldMatrix = MakeTranslateMatrix(Vector3(-0.5f, 0.5f, 0.0f));
 
     // ViewMatrixを作って単位行列を代入（2Dスプライトなら単位行列でOK）
     Matrix4x4 viewMatrix = MakeIdentity4x4();
