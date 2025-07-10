@@ -125,8 +125,18 @@ void TextureManager::LoadTexture(const std::string& filePath) {
     );
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> TextureManager::UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource> texture, const DirectX::ScratchImage& mipImages)
+Microsoft::WRL::ComPtr<ID3D12Resource> TextureManager::UploadTextureData(
+    Microsoft::WRL::ComPtr<ID3D12Resource> texture,
+    const DirectX::ScratchImage& mipImages)
 {
+    extern DirectXCommon* dxCommon;
+    ID3D12Device* device = dxCommon->GetDevice();
+    ID3D12GraphicsCommandList* commandList = dxCommon->GetCommandList();
+    ID3D12CommandQueue* commandQueue = dxCommon->GetCommandQueue();
+    ID3D12Fence* fence = dxCommon->GetFence();
+    ID3D12CommandAllocator* commandAllocator = dxCommon->GetCommandAllocator();
+
+
     std::vector<D3D12_SUBRESOURCE_DATA> subresources;
     DirectX::PrepareUpload(
         device.Get(),
