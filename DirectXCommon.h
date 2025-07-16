@@ -15,6 +15,7 @@ class DirectXCommon
 {
 public:
 
+	static const uint32_t kMaxSRVCount; // SRVの最大数
 
 	void Initialize(WinApp* winApp);
 
@@ -103,13 +104,6 @@ public:
     
     [[nodiscard]]
     Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(Microsoft::WRL::ComPtr<ID3D12Resource> texture, const DirectX::ScratchImage& mipImages);
-
-    /// <summary>
-    /// テクスチャファイルの読み込み
-    /// </summary>
-    /// <param name="filePath">テクスチャファイルのパス</param>
-    /// <returns>画像イメージデータ</returns>
-    static DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
 	/// <summary>
 	/// 深度ステンシルテクスチャリソースの生成

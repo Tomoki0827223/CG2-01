@@ -1,9 +1,12 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
 #include "DirectXCommon.h"
+#include "TextureManager.h"
 
-void Sprite::Initialize(SpriteCommon* spriteCommon)
-{
+void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath) {
+
+    textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+
     this->spriteCommon = spriteCommon;
 
     // 頂点データ作成
@@ -166,10 +169,10 @@ void Sprite::Draw()
     commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
     commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 
-    // SRVのDescriptorTableの先頭を設定（例: 2番目のRootParameterがSRVの場合）
-    // 例: テクスチャが1枚だけの場合
-    // D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = dxCommon->GetSRVGPUDescriptorHandle(0);
-    // commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
+    // SRVDescriptorTableの先頭を設定（変更点）
+    commandList->SetGraphicsRootDescriptorTable(
+        2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex)
+    );
 
     // 描画コール
     commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);

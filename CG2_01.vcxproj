@@ -27,6 +27,7 @@
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="SpriteCommon.cpp" />
     <ClCompile Include="StringUitilty.cpp" />
+    <ClCompile Include="TextureManager.cpp" />
     <ClCompile Include="WinApp.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -48,6 +49,7 @@
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="SpriteCommon.h" />
     <ClInclude Include="StringUitilty.h" />
+    <ClInclude Include="TextureManager.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Vector4.h" />
     <ClInclude Include="Vector2.h" />
