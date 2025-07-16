@@ -5,9 +5,9 @@
 
 void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath) {
 
-    textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
-
     this->spriteCommon = spriteCommon;
+    
+    textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 
     // 頂点データ作成
     CreateVertexData();
@@ -113,44 +113,61 @@ void Sprite::CreateTransformationMatrixData()
     transformationMatrixData->World = MakeIdentity4x4();
 }
 
+//void Sprite::Update()
+//{
+//    // 頂点リソースにデータを書き込む（4点分）
+//    // 例: ここではY座標をアニメーションさせる
+//    float time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(
+//        std::chrono::steady_clock::now().time_since_epoch()).count()) * 0.001f;
+//    float offsetY = std::sin(time) * 0.0f; // 上下に0.1動かす
+//
+//    //vertexData[0].position.y = 0.5f + offsetY;  // 左上
+//    //vertexData[1].position.y = 0.5f + offsetY;  // 右上
+//    //vertexData[2].position.y = -0.5f + offsetY; // 左下
+//    //vertexData[3].position.y = -0.5f + offsetY; // 右下
+//
+//    // 0.5f → 0.2f に変更
+//    vertexData[0].position = Vector4(-0.2f, 0.2f, 0.0f, 1.0f); // 左上
+//    vertexData[1].position = Vector4(0.2f, 0.2f, 0.0f, 1.0f);  // 右上
+//    vertexData[2].position = Vector4(-0.2f, -0.2f, 0.0f, 1.0f);// 左下
+//    vertexData[3].position = Vector4(0.2f, -0.2f, 0.0f, 1.0f); // 右下
+//
+//    // Transform情報を作る
+//    //Matrix4x4 worldMatrix = MakeIdentity4x4();
+//    // ここで平行移動や回転などを合成する場合は行列を掛け合わせてworldMatrixを作る
+//
+//
+//    Matrix4x4 worldMatrix = MakeTranslateMatrix(Vector3(position_.x, position_.y, 0.0f));
+//    // 例：左上に移動（NDC座標系で -1,+1 が左上）
+//    // スプライトのサイズがNDCで1.0fの場合、左上に表示するには
+//    worldMatrix = MakeTranslateMatrix(Vector3(-0.5f, 0.5f, 0.0f));
+//
+//    // ViewMatrixを作って単位行列を代入（2Dスプライトなら単位行列でOK）
+//    Matrix4x4 viewMatrix = MakeIdentity4x4();
+//
+//    // ProjectionMatrixを作って並行投影行列を書き込む
+//    Matrix4x4 projectionMatrix = MakeIdentity4x4();
+//    // 必要に応じて正射影行列を作成する関数を使ってください
+//
+//    // transformationMatrixDataに書き込む
+//    transformationMatrixData->WVP = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+//    transformationMatrixData->World = worldMatrix;
+//}
+
 void Sprite::Update()
 {
-    // 頂点リソースにデータを書き込む（4点分）
-    // 例: ここではY座標をアニメーションさせる
-    float time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::steady_clock::now().time_since_epoch()).count()) * 0.001f;
-    float offsetY = std::sin(time) * 0.0f; // 上下に0.1動かす
+    // 頂点データ（サイズ調整済み）
+    vertexData[0].position = Vector4(-0.2f, 0.2f, 0.0f, 1.0f); // 左上
+    vertexData[1].position = Vector4(0.2f, 0.2f, 0.0f, 1.0f);  // 右上
+    vertexData[2].position = Vector4(-0.2f, -0.2f, 0.0f, 1.0f);// 左下
+    vertexData[3].position = Vector4(0.2f, -0.2f, 0.0f, 1.0f); // 右下
 
-    vertexData[0].position.y = 0.5f + offsetY;  // 左上
-    vertexData[1].position.y = 0.5f + offsetY;  // 右上
-    vertexData[2].position.y = -0.5f + offsetY; // 左下
-    vertexData[3].position.y = -0.5f + offsetY; // 右下
+    // position_で移動
+    Matrix4x4 worldMatrix = MakeTranslateMatrix(Vector3(position_.x, position_.y, 0.0f));
 
-    // インデックスリソースにデータを書き込む（6個分）
-    // 例: 通常は固定だが、例えば左右を入れ替える場合
-    // indexData[0] = 1; // 右上
-    // indexData[1] = 0; // 左上
-    // indexData[2] = 2; // 左下
-    // indexData[3] = 2; // 左下
-    // indexData[4] = 0; // 左上
-    // indexData[5] = 3; // 右下
-
-    // Transform情報を作る
-    Matrix4x4 worldMatrix = MakeIdentity4x4();
-    // ここで平行移動や回転などを合成する場合は行列を掛け合わせてworldMatrixを作る
-
-    // 例：左上に移動（NDC座標系で -1,+1 が左上）
-    // スプライトのサイズがNDCで1.0fの場合、左上に表示するには
-    worldMatrix = MakeTranslateMatrix(Vector3(-0.5f, 0.5f, 0.0f));
-
-    // ViewMatrixを作って単位行列を代入（2Dスプライトなら単位行列でOK）
     Matrix4x4 viewMatrix = MakeIdentity4x4();
-
-    // ProjectionMatrixを作って並行投影行列を書き込む
     Matrix4x4 projectionMatrix = MakeIdentity4x4();
-    // 必要に応じて正射影行列を作成する関数を使ってください
 
-    // transformationMatrixDataに書き込む
     transformationMatrixData->WVP = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
     transformationMatrixData->World = worldMatrix;
 }
@@ -176,4 +193,11 @@ void Sprite::Draw()
 
     // 描画コール
     commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+}
+
+void Sprite::ChangeTexture(const std::string& textureFilePath) {
+    // テクスチャが未ロードならロード
+    TextureManager::GetInstance()->LoadTexture(textureFilePath);
+    // テクスチャ番号を更新
+    textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 }

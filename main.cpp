@@ -222,32 +222,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//モデル読み込み
 	ModelData modelData = LoaObjFile("resources", "axis.obj");
-		
-	////頂点リソースを作る
-	//Microsoft::WRL::ComPtr<ID3D12Resource> vertexReComPtr = dxCommon->CreateBufferResource(sizeof(VertexData) * modelData.vertices.size());
-	//ID3D12Resource* vertexResource = vertexReComPtr.Get();
 
-	//// モンスターボール
-	//TextureManager::GetInstance()->LoadTexture("resources/monsterBall.png");
-	//// uvChecker
-	//TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
+	// 複数Sprite生成
+	std::vector<Sprite*> sprites;
+	const int spriteCount = 5;
+	const float startX = -0.7f; // NDC座標系で左端
+	const float startY = 0.3f;  // NDC座標系で上
+	const float offsetX = 0.35f; // NDC座標系で横方向の間隔
 
-	//// モンスターボールとuvCheckerのテクスチャ番号を取得
-	//uint32_t monsterBallIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath("resources/monsterBall.png");
-	//uint32_t uvCheckerIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath("resources/uvChecker.png");
-
-	//// GPUハンドルを取得
-	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = TextureManager::GetInstance()->GetSrvHandleGPU(monsterBallIndex);
-	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPUUv = TextureManager::GetInstance()->GetSrvHandleGPU(uvCheckerIndex);
-
-	//// 変更後（TextureManagerにロードを任せるだけでOK）
-	//TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
-
-	//// テクスチャ番号を取得
-	//uint32_t modelTextureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
-
-	//// GPUハンドルを取得
-	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = TextureManager::GetInstance()->GetSrvHandleGPU(modelTextureIndex);
+	for (int i = 0; i < spriteCount; ++i) {
+		Sprite* s = new Sprite();
+		const char* texPath = (i % 2 == 0) ? "resources/uvChecker.png" : "resources/monsterBall.png";
+		TextureManager::GetInstance()->LoadTexture(texPath);
+		s->Initialize(spriteCommon, texPath);
+		sprites.push_back(s);
+	}
 
 	MSG msg{};
 
@@ -275,14 +264,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui_ImplDX12_NewFrame();
 			ImGui::NewFrame();
 
-			ImGui::Begin("Ball Controls");
-			ImGui::Checkbox("useMonsterball", &useMonsterBall);
-
-			//// 切り替え
-			//ImTextureID imguiTexture = reinterpret_cast<ImTextureID>(
-			//	useMonsterBall ? textureSrvHandleGPU2.ptr : textureSrvHandleGPUUv.ptr
-			//	);
-			//ImGui::Image(imguiTexture, ImVec2(128, 128));
+			ImGui::Begin("Sprite Controls");
+			for (int i = 0; i < sprites.size(); ++i) {
+				Vector2& pos = sprites[i]->position_;
+				// ラベルを動的に生成
+				std::string label = "Sprite " + std::to_string(i) + " Position";
+				ImGui::DragFloat2(label.c_str(), &pos.x, 0.01f, -1.0f, 1.0f, "%.2f");
+			}
 			ImGui::End();
 
 			// ImGui描画
@@ -296,9 +284,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			dxCommon->InitializeViewportAndScissorRect();
 			dxCommon->InitializeScissorRect();
 
+			// 描画ループ
+			for (auto s : sprites) {
+				// ここで各スプライトのテクスチャSRVをセット
+				dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(s->textureIndex));
+				s->Update();
+				s->Draw();
+			}
+
+			// 例: スペースキーでテクスチャ切り替え
+			if (input->TriggerKey(DIK_SPACE)) {
+				sprite->ChangeTexture("resources/monsterBall.png");
+			}
+
+			// 1枚目のspriteも同様に
+			dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(sprite->textureIndex));
 			sprite->Update();
 			sprite->Draw();
-
 
             // 描画後処理
             dxCommon->PostDraw();

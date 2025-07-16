@@ -39,9 +39,11 @@ class Sprite
 public:
 
     void Initialize(SpriteCommon* spriteCommon, std::string textureFilePath);
-    void Update(); // ←追加
-    void Draw();   // ←追加
-    uint32_t textureIndex = 0; // テクスチャ番号保持用
+    void Update();
+    void Draw();
+    void ChangeTexture(const std::string& textureFilePath); // ←追加
+    Vector2 position_{ 0.0f, 0.0f };
+    uint32_t textureIndex = 0;
 
 private:
     // 共通部
@@ -77,6 +79,5 @@ private:
 
     // 座標変換行列データ作成（初期化用のprivate関数）
     void CreateTransformationMatrixData();
-
 
 };

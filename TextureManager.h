@@ -53,4 +53,5 @@ public:
     uint32_t GetTextureIndexByFilePath(const std::string& filePath);
     // GPUハンドル取得
     D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureIndex);
+
 };
