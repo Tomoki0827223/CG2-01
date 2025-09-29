@@ -39,7 +39,7 @@ void TextureManager::Finalize() {
 }
 
 void TextureManager::Initialize(DirectXCommon* dxCommon_) {
-    dxCommon = dxCommon_;
+    dxCommon = dxCommon_; // 👈 ここでポインタを設定
     textureDatas.reserve(DirectXCommon::kMaxSRVCount);
 }
 

@@ -7,6 +7,8 @@
 #include "SpriteCommon.h"
 #include "Sprite.h"
 #include "TextureManager.h"
+#include "Object3dCommon.h"
+#include "Object3d.h"
 #include "D3DResourceLeakChecker.h"
 #include "Input.h"
 #include "Vector2.h"
@@ -51,131 +53,6 @@ Transform1 uvTransformSprite{
 	{0.0f, 0.0f, 0.0f},
 };
 
-struct MaterialData {
-	std::string textureFilePath;
-};
-
-
-struct ModelData {
-	std::vector<VertexData> vertices;
-	MaterialData material;
-};
-
-#pragma endregion
-
-MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
-	// 1.2.必要な変数の宣言とファイルを開く
-	MaterialData materialData; // 構築するMaterialData
-	std::string line; // ファイルから読んだ1行を格納するもの
-	std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
-	assert(file.is_open()); // とりあえず開けなかったら止める
-	// 3.ファイルを読み、MaterialDataを構築
-	while (std::getline(file, line))
-	{
-		std::string identifier;
-		std::istringstream s(line);
-		s >> identifier;
-
-		// identifierに応じた処理
-		if (identifier == "map_Kd") {
-			std::string textureFilename;
-			s >> textureFilename;
-			// 連結してファイルパスにする
-			materialData.textureFilePath = directoryPath + "/" + textureFilename;
-		}
-	}
-	return materialData;
-}
-
-ModelData LoaObjFile(const std::string& directoryPath, const std::string& filename) {
-	
-	// 1. 中で必要となる変数の宣言
-	ModelData modelData; // 構築するModalData
-	std::vector<Vector4> positions; // 位置
-	std::vector<Vector3> normals; // 法線
-	std::vector<Vector2> texcoords; // テクスチャ座標
-	std::string line; // ファイルから読んだ1行を格納するもの
-	
-	// 2. ファイルを開く
-	std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
-	assert(file.is_open()); // とりあえず開けなかったら止める
-	
-	// 3. 実際のファイルを読み込み、ModelDataを構築していく
-	while (std::getline(file, line)) {
-		std::string identifier;
-		std::istringstream s(line);
-		s >> identifier; // 先頭の識別子を読む
-		// identifierに応じた処理
-		if (identifier == "v") {
-			Vector4 position;
-			s >> position.x >> position.y >> position.z;
-			position.w = 1.0f;
-
-			position.x *= -1.0f;
-
-			positions.push_back(position);
-		}
-		else if (identifier == "vt") {
-			Vector2 texcoord;
-			s >> texcoord.x >> texcoord.y;
-
-			texcoord.y = 1.0f - texcoord.y;
-			
-			texcoords.push_back(texcoord);
-		}
-		else if (identifier == "vn") {
-			Vector3 normal;
-
-			s >> normal.x >> normal.y >> normal.z;
-
-			normal.x *= -1.0f;
-
-			normals.push_back(normal);
-		}
-		else if (identifier == "f") {
-			
-			VertexData triangle[3];
-			
-			// 面は三角形限定。その他は未対応
-			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
-				std::string vertexDefinition;
-				s >> vertexDefinition;
-
-				// 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
-				std::istringstream v(vertexDefinition);
-				uint32_t elementIndeices[3];
-				for (int32_t element = 0; element < 3; ++element) {
-					std::string index;
-					std::getline(v, index, '/'); // 区切りでインデックスを読んでいく
-					elementIndeices[element] = std::stoi(index);
-				}
-
-				// 要素へのIndexから、実際の要素の値をを取得して頂点を構築する
-				Vector4 position = positions[elementIndeices[0] - 1];
-				Vector2 texcoord = texcoords[elementIndeices[1] - 1];
-				Vector3 normal = normals[elementIndeices[2] - 1];
-				VertexData vertex = { position,texcoord,normal };
-				modelData.vertices.push_back(vertex);
-				triangle[faceVertex] = { position,texcoord,normal };
-			}
-
-			// 頂点を逆順で登録することで、回り順を逆にする
-			modelData.vertices.push_back(triangle[2]);
-			modelData.vertices.push_back(triangle[1]);
-			modelData.vertices.push_back(triangle[0]);
-		}
-		else if (identifier == "mtllib") {
-			// mateialTemplateLibraryファイルの名前を取得する
-			std::string materialFilename;
-			s >> materialFilename;
-			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
-			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
-		}
-	}
-	return modelData;
-
-}
-
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//D3DResourceLeakChecker LeakCheak;
 
@@ -194,18 +71,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dxCommon = new DirectXCommon();
 	dxCommon->Initialize(winApp_);
 
+	// 1. TextureManagerの初期化を最優先で実行する
+	TextureManager::GetInstance()->Initialize(dxCommon);
+
+	// 2. Object3dCommonの生成と初期化
+	Object3dCommon* object3dCommon = nullptr;
+	object3dCommon = new Object3dCommon();
+	object3dCommon->Initialize(dxCommon);
+
+	Object3d* object3d = nullptr; // 👈 最初の宣言 (83行目付近)
+	object3d = new Object3d(); // 👈 割り当て
+	object3d->Initialize(object3dCommon);
+	// ----------------------------------------------------------------------
+
+	// 4. SpriteCommonの生成と初期化
 	SpriteCommon* spriteCommon = nullptr;
 	spriteCommon = new SpriteCommon();
 	spriteCommon->Initialize(dxCommon);
 
-	TextureManager::GetInstance()->Initialize(dxCommon);
-	// 1. テクスチャをロードする
+
+	// 1. テクスチャをロードする (Objファイルロードの前に実行)
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
 
 	// Spriteの生成
 	Sprite* sprite = new Sprite();
 	sprite->Initialize(spriteCommon, "resources/uvChecker.png");
-
 
 	//ウインドウを表示する
 	ShowWindow(winApp_->GetHwnd(), SW_SHOW);
@@ -218,10 +108,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//Resourcef
 	const uint32_t kSubdivision = 36;
-
-
-	//モデル読み込み
-	ModelData modelData = LoaObjFile("resources", "axis.obj");
 
 	// 複数Sprite生成
 	std::vector<Sprite*> sprites;
@@ -243,71 +129,86 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	dxCommon->InitializeImGui();
 
-    while (true)
-    {
-        if (winApp_->ProsessMeassage())
-        {
-            break;
-        }
-        else
-        {
-            // GE3
-            input->Update();
+	while (true)
+	{
+		if (winApp_->ProsessMeassage())
+		{
+			break;
+		}
+		else
+		{
+			// GE3
+			input->Update();
 
-            // ゲーム処理
+			// ゲーム処理
 
-            // 描画前処理
-            dxCommon->PreDraw();
+			// 描画前処理
+			dxCommon->PreDraw();
 
 			// ImGuiのフレーム開始
 			ImGui_ImplWin32_NewFrame();
 			ImGui_ImplDX12_NewFrame();
 			ImGui::NewFrame();
 
-			ImGui::Begin("Sprite Controls");
+			ImGui::Begin("Controls"); // 👈 ウィンドウ名を修正
 
-			// --- [🚨 修正箇所: 単体の'sprite'の位置を操作できるように変更 🚨] ---
+			// --- [🚨 修正箇所 1: Object3d の回転操作 🚨] ---
+			// Object3d* object3d の transform.rotate メンバを参照
+			Vector3& rot = object3d->transform.rotate;
 
+			// ImGui::DragFloat3 で回転角度を操作可能にする (rad)
+			// rot.x: 参照先（Vector3のx）
+			// 0.01f: 変化量（ドラッグ速度）
+			ImGui::DragFloat3("Object Rotate (rad)", &rot.x, 0.01f, -6.28f, 6.28f, "%.2f");
+			// --------------------------------------------------
+
+			// --- [🚨 修正箇所 2: Sprite の位置操作 🚨] ---
 			// 1. 単体のspriteの位置 (position_) を参照
 			Vector2& pos = sprite->position_;
-
-			// 2. ラベルを「Sprite Position」として固定
 			std::string label = "Sprite Position";
 
-			// 3. ImGui::DragFloat2 で位置を操作可能にする
-			//    - pos.x/pos.y: 変更対象のVector2
-			//    - 0.01f: 変化量 (ドラッグ速度)
-			//    - -1.0f, 1.0f: NDC座標系の有効範囲
+			// 2. ImGui::DragFloat2 で位置を操作可能にする (NDC座標系)
 			ImGui::DragFloat2(label.c_str(), &pos.x, 0.01f, -1.0f, 1.0f, "%.2f");
-			ImGui::End();
+			// --------------------------------------------------
+
+			ImGui::End(); // 👈 ImGuiブロックの終了
 
 			// ImGui描画
 			ImGui::Render();
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
 
-			// --- [🚨 追加箇所 1: ImGui後に描画設定をリセット 🚨] ---
-			// ビューポートとシザー矩形をウィンドウ全体に戻す
-			dxCommon->InitializeViewportAndScissorRect(); // ビューポートとシザー矩形の値をメンバに設定
-			dxCommon->InitializeScissorRect();           // コマンドリストにビューポートとシザー矩形を再設定
+			// --- [🚨 ImGui後の設定リセット 🚨] ---
+			dxCommon->InitializeViewportAndScissorRect(); // ビューポートとシザー矩形の設定値を更新
+			dxCommon->InitializeScissorRect();
+			
+			// コマンドリストにビューポートとシザー矩形を再設定
 			// ----------------------------------------------------
 
-			spriteCommon->CommandListCreate(); // RootSignatureとPipelineStateの設定（これは残す）
+			// 3Dオブジェクトの描画準備 (RootSignature/PipelineStateを設定)
+			object3dCommon->SetCommand();
+
+			// 3Dオブジェクト個々の描画
+			object3d->Update();
+			object3d->Draw();
+
+			// 2D（Sprite）の描画準備 (3D描画後に行う)
+			spriteCommon->CommandListCreate();
 
 			// 例: スペースキーでテクスチャ切り替え
 			if (input->TriggerKey(DIK_SPACE)) {
 				sprite->ChangeTexture("resources/monsterBall.png");
 			}
 
-			
+
 			// 1枚目のspriteも同様に
 			dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(sprite->textureIndex));
 			sprite->Update();
 			sprite->Draw();
 
 			// 描画後処理
-            dxCommon->PostDraw();
-        }
-    }
+			dxCommon->PostDraw();
+		}
+	}
 
 
 	//Windows終了
@@ -318,6 +219,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete winApp_;
 	delete dxCommon;
 	delete spriteCommon;
+	delete object3dCommon;
+	delete object3d;
 
 	return 0;
 }

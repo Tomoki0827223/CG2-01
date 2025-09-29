@@ -24,6 +24,8 @@
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Object3d.cpp" />
+    <ClCompile Include="Object3dCommon.cpp" />
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="SpriteCommon.cpp" />
     <ClCompile Include="StringUitilty.cpp" />
@@ -45,6 +47,8 @@
     <ClInclude Include="Input.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Matrix4x4.h" />
+    <ClInclude Include="Object3d.h" />
+    <ClInclude Include="Object3dCommon.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="SpriteCommon.h" />
