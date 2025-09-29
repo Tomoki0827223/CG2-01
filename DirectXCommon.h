@@ -80,9 +80,14 @@ public:
     //Getter
     ID3D12Device* GetDevice() const { return device.Get(); }
     ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
+    
+    ID3D12CommandQueue* GetCommandQueue() const { return commandQueue.Get(); } // 追加
+    ID3D12CommandAllocator* GetCommandAllocator() const { return commandAllocator.Get(); } // 追加
+    
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetDSVDescriptorHeap() const { return dsvDescriptorHeap; }
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetRTVDescriptorHeap() const { return rtvDescriptorHeap; }
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetSRVDescriptorHeap() const { return srvDescriptorHeap; }
+    
     uint32_t GetDescriptorSizeRTV() const { return descriptorSizeRTV; }
     uint32_t GetDescriptorSizeSRV() const { return descriptorSizeSRV; }
 
@@ -109,6 +114,12 @@ public:
 	/// 深度ステンシルテクスチャリソースの生成
     /// 
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height);
+
+    // [🚨 修正箇所 3: WaitForGPUの追加 🚨]
+    /// <summary>
+    /// GPUのコマンド実行完了を待機する
+    /// </summary>
+    void WaitForGPU(); // 追加
 
 private:
 

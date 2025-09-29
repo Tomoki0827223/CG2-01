@@ -637,6 +637,23 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::UploadTextureData(Microsof
 	return intermediateResource;
 }
 
+void DirectXCommon::WaitForGPU()
+{
+	// フェンスの値をインクリメント
+	fenceValue++;
+	// コマンドキューにシグナルを発行
+	HRESULT hr = commandQueue->Signal(fence.Get(), fenceValue);
+	assert(SUCCEEDED(hr));
+
+	// GPUが現在のフェンス値に達するまで待機
+	if (fence->GetCompletedValue() < fenceValue)
+	{
+		hr = fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		assert(SUCCEEDED(hr));
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
+}
+
 Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height)
 {
 

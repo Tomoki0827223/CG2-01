@@ -84,6 +84,36 @@ void TextureManager::LoadTexture(const std::string& filePath)
     textureData.srvHandleCPU = dxCommon->GetSRVCPUDescriptorHandle(srvIndex);
     textureData.srvHandleGPU = dxCommon->GetSRVGPUDescriptorHandle(srvIndex);
 
+    // [🚨 修正箇所 1: アップロード処理の実行とコマンドリストの処理を追加 🚨]
+    // 6. テクスチャのアップロードとコマンドリストの実行
+
+    // コマンドリストをリセットしてテクスチャアップロードコマンドを記録可能にする (直前で閉じられていなければOK)
+    // 実際には、Initialize中に全てのテクスチャをロードする場合は、
+    // 全ロード後に一度に実行するのが効率的ですが、今回は即座にアップロードします。
+    // Initialize()時にコマンドリストは開かれていると仮定します。
+
+    // アップロード用の中間リソースを取得
+    Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = dxCommon->UploadTextureData(textureData.resource, mipImages);
+
+    // [一時的な処理] ロード後にコマンドリストをクローズして実行し、リセットする
+    // Initialize中でテクスチャをロードしているため、この処理が必要です。
+    // 通常は、Initializeの最後に一度だけ実行します。
+
+    HRESULT hr_close = dxCommon->GetCommandList()->Close();
+    assert(SUCCEEDED(hr_close));
+
+    ID3D12CommandList* commandLists[] = { dxCommon->GetCommandList() };
+    dxCommon->GetCommandQueue()->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+    // フェンスでGPUの完了を待機
+    dxCommon->WaitForGPU();
+
+    // コマンドリストをリセットし、再びコマンドを記録できるようにする
+    HRESULT hr_reset = dxCommon->GetCommandAllocator()->Reset();
+    assert(SUCCEEDED(hr_reset));
+    hr_reset = dxCommon->GetCommandList()->Reset(dxCommon->GetCommandAllocator(), nullptr);
+    assert(SUCCEEDED(hr_reset));
+
     // 7. SRV生成
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Format = textureData.metadata.format;
