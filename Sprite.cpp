@@ -6,17 +6,33 @@
 void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath) {
 
     this->spriteCommon = spriteCommon;
-    
+
+    // 1. テクスチャインデックスを取得
     textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 
-    // 頂点データ作成
+    // 2. 頂点データ、マテリアルデータ、座標変換行列データ作成 (既存の処理)
     CreateVertexData();
-
-    // マテリアルデータ作成
     CreateMaterialData();
-
-    // 座標変換行列データ作成
     CreateTransformationMatrixData();
+
+    // --- [🚨 修正箇所 3: Initialize内でAdjustTextureSizeを呼び出す 🚨] ---
+    // テクスチャサイズを画像に合わせて設定
+    AdjustTextureSize();
+    // ----------------------------------------------------------------------
+}
+
+// --- [🚨 追加箇所 2: AdjustTextureSizeの実装 🚨] ---
+void Sprite::AdjustTextureSize()
+{
+    // テクスチャメタデータを取得
+    const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(textureIndex);
+
+    // 切り出しサイズを画像サイズに合わせる
+    // (textureSize が切り出しサイズとスプライトの描画サイズの両方を兼ねていると仮定)
+    textureSize.x = static_cast<float>(metadata.width);
+    textureSize.y = static_cast<float>(metadata.height);
+
+    // ※ スライドの指示 に従って textureSize を設定
 }
 
 void Sprite::CreateVertexData()
@@ -53,21 +69,21 @@ void Sprite::CreateVertexData()
 
     // 頂点データの初期値をセット
     // 左上(0), 右上(1), 左下(2), 右下(3) の順
-    vertexData[0].position = Vector4(-0.5f, 0.5f, 0.0f, 1.0f); // 左上
-    vertexData[0].texcoord = Vector2(0.0f, 0.0f);
-    vertexData[0].normal = Vector3(0.0f, 0.0f, 1.0f);
+    //vertexData[0].position = Vector4(-0.5f, 0.5f, 0.0f, 1.0f); // 左上
+    //vertexData[0].texcoord = Vector2(0.0f, 0.0f);
+    //vertexData[0].normal = Vector3(0.0f, 0.0f, 1.0f);
 
-    vertexData[1].position = Vector4(0.5f, 0.5f, 0.0f, 1.0f); // 右上
-    vertexData[1].texcoord = Vector2(1.0f, 0.0f);
-    vertexData[1].normal = Vector3(0.0f, 0.0f, 1.0f);
+    //vertexData[1].position = Vector4(0.5f, 0.5f, 0.0f, 1.0f); // 右上
+    //vertexData[1].texcoord = Vector2(1.0f, 0.0f);
+    //vertexData[1].normal = Vector3(0.0f, 0.0f, 1.0f);
 
-    vertexData[2].position = Vector4(-0.5f, -0.5f, 0.0f, 1.0f); // 左下
-    vertexData[2].texcoord = Vector2(0.0f, 1.0f);
-    vertexData[2].normal = Vector3(0.0f, 0.0f, 1.0f);
+    //vertexData[2].position = Vector4(-0.5f, -0.5f, 0.0f, 1.0f); // 左下
+    //vertexData[2].texcoord = Vector2(0.0f, 1.0f);
+    //vertexData[2].normal = Vector3(0.0f, 0.0f, 1.0f);
 
-    vertexData[3].position = Vector4(0.5f, -0.5f, 0.0f, 1.0f); // 右下
-    vertexData[3].texcoord = Vector2(1.0f, 1.0f);
-    vertexData[3].normal = Vector3(0.0f, 0.0f, 1.0f);
+    //vertexData[3].position = Vector4(0.5f, -0.5f, 0.0f, 1.0f); // 右下
+    //vertexData[3].texcoord = Vector2(1.0f, 1.0f);
+    //vertexData[3].normal = Vector3(0.0f, 0.0f, 1.0f);
 
     // インデックスデータの初期値をセット（2三角形）
     indexData[0] = 0; // 左上
@@ -113,54 +129,75 @@ void Sprite::CreateTransformationMatrixData()
     transformationMatrixData->World = MakeIdentity4x4();
 }
 
-//void Sprite::Update()
-//{
-//    // 頂点リソースにデータを書き込む（4点分）
-//    // 例: ここではY座標をアニメーションさせる
-//    float time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(
-//        std::chrono::steady_clock::now().time_since_epoch()).count()) * 0.001f;
-//    float offsetY = std::sin(time) * 0.0f; // 上下に0.1動かす
-//
-//    //vertexData[0].position.y = 0.5f + offsetY;  // 左上
-//    //vertexData[1].position.y = 0.5f + offsetY;  // 右上
-//    //vertexData[2].position.y = -0.5f + offsetY; // 左下
-//    //vertexData[3].position.y = -0.5f + offsetY; // 右下
-//
-//    // 0.5f → 0.2f に変更
-//    vertexData[0].position = Vector4(-0.2f, 0.2f, 0.0f, 1.0f); // 左上
-//    vertexData[1].position = Vector4(0.2f, 0.2f, 0.0f, 1.0f);  // 右上
-//    vertexData[2].position = Vector4(-0.2f, -0.2f, 0.0f, 1.0f);// 左下
-//    vertexData[3].position = Vector4(0.2f, -0.2f, 0.0f, 1.0f); // 右下
-//
-//    // Transform情報を作る
-//    //Matrix4x4 worldMatrix = MakeIdentity4x4();
-//    // ここで平行移動や回転などを合成する場合は行列を掛け合わせてworldMatrixを作る
-//
-//
-//    Matrix4x4 worldMatrix = MakeTranslateMatrix(Vector3(position_.x, position_.y, 0.0f));
-//    // 例：左上に移動（NDC座標系で -1,+1 が左上）
-//    // スプライトのサイズがNDCで1.0fの場合、左上に表示するには
-//    worldMatrix = MakeTranslateMatrix(Vector3(-0.5f, 0.5f, 0.0f));
-//
-//    // ViewMatrixを作って単位行列を代入（2Dスプライトなら単位行列でOK）
-//    Matrix4x4 viewMatrix = MakeIdentity4x4();
-//
-//    // ProjectionMatrixを作って並行投影行列を書き込む
-//    Matrix4x4 projectionMatrix = MakeIdentity4x4();
-//    // 必要に応じて正射影行列を作成する関数を使ってください
-//
-//    // transformationMatrixDataに書き込む
-//    transformationMatrixData->WVP = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-//    transformationMatrixData->World = worldMatrix;
-//}
-
 void Sprite::Update()
 {
-    // 頂点データ（サイズ調整済み）
-    vertexData[0].position = Vector4(-0.2f, 0.2f, 0.0f, 1.0f); // 左上
-    vertexData[1].position = Vector4(0.2f, 0.2f, 0.0f, 1.0f);  // 右上
-    vertexData[2].position = Vector4(-0.2f, -0.2f, 0.0f, 1.0f);// 左下
-    vertexData[3].position = Vector4(0.2f, -0.2f, 0.0f, 1.0f); // 右下
+    // --- 1. 頂点座標の計算 (アンカーポイントとフリップの反映) ---
+
+    // 頂点座標の計算 (幅1.0f, 高さ1.0fのスプライトとして計算)
+    float left = 0.0f - anchorPoint.x;
+    float right = 1.0f - anchorPoint.x;
+    float top = 1.0f - anchorPoint.y;
+    float bottom = 0.0f - anchorPoint.y;
+
+    // isFlipX/Y に応じて座標を入れ替え
+    if (isFlipX) {
+        std::swap(left, right);
+    }
+    if (isFlipY) {
+        std::swap(top, bottom);
+    }
+
+    // --- 2. 描画サイズの調整 (アスペクト比の計算とウィンドウ補正) ---
+
+    const float kDefaultSizeNDC = 0.5f; // 描画サイズ基準 (NDC座標系)
+    const DirectX::TexMetadata& metadata =
+        TextureManager::GetInstance()->GetMetaData(textureIndex);
+
+    // 1. テクスチャの解像度に基づくアスペクト比
+    float textureAspectRatio = (float)metadata.width / (float)metadata.height;
+
+    // 2. ウィンドウの解像度に基づくアスペクト比 (WinApp::kClientWidth/kClientHeight にアクセスできると仮定)
+    // ※ この情報がなければ正方形にはできません。
+    // ※ WinApp.hがインクルードされていないため、エラーになる場合は適宜修正してください。
+    float windowAspectRatio = (float)WinApp::kClientWidth / (float)WinApp::kClientHeight;
+
+    // NDCサイズ計算 (テクスチャのアスペクト比を反映)
+    float kSpriteSizeX = kDefaultSizeNDC;
+    float kSpriteSizeY = kDefaultSizeNDC;
+
+    if (textureAspectRatio > 1.0f) { // 横長テクスチャの場合
+        kSpriteSizeY = kDefaultSizeNDC / textureAspectRatio;
+    }
+    else { // 縦長または正方形テクスチャの場合
+        kSpriteSizeX = kDefaultSizeNDC * textureAspectRatio;
+    }
+
+    // 3. ウィンドウのアスペクト比でY軸を補正 (正方形に見えるようにする)
+    kSpriteSizeY *= windowAspectRatio;
+
+    // --- 3. 頂点位置の更新 ---
+
+    // 調整した kSpriteSizeX/Y を適用してNDC座標を設定
+    vertexData[0].position = Vector4(left * kSpriteSizeX, top * kSpriteSizeY, 0.0f, 1.0f); // 左上
+    vertexData[1].position = Vector4(right * kSpriteSizeX, top * kSpriteSizeY, 0.0f, 1.0f);  // 右上
+    vertexData[2].position = Vector4(left * kSpriteSizeX, bottom * kSpriteSizeY, 0.0f, 1.0f);// 左下
+    vertexData[3].position = Vector4(right * kSpriteSizeX, bottom * kSpriteSizeY, 0.0f, 1.0f); // 右下
+
+    // --- 4. テクスチャ座標 (UV) の計算と更新 ---
+
+    // ピクセル座標から正規化UV座標を計算
+    float tex_left = textureLeftTop.x / metadata.width;
+    float tex_right = (textureLeftTop.x + textureSize.x) / metadata.width;
+    float tex_top = textureLeftTop.y / metadata.height;
+    float tex_bottom = (textureLeftTop.y + textureSize.y) / metadata.height;
+
+    // 頂点データのtexcoordを更新
+    vertexData[0].texcoord = Vector2(tex_left, tex_top);    // 左上
+    vertexData[1].texcoord = Vector2(tex_right, tex_top);   // 右上
+    vertexData[2].texcoord = Vector2(tex_left, tex_bottom); // 左下
+    vertexData[3].texcoord = Vector2(tex_right, tex_bottom);// 右下
+
+    // --- 5. 座標変換行列の更新 ---
 
     // position_で移動
     Matrix4x4 worldMatrix = MakeTranslateMatrix(Vector3(position_.x, position_.y, 0.0f));

@@ -226,9 +226,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 複数Sprite生成
 	std::vector<Sprite*> sprites;
 	const int spriteCount = 5;
-	const float startX = -0.7f; // NDC座標系で左端
-	const float startY = 0.3f;  // NDC座標系で上
-	const float offsetX = 0.35f; // NDC座標系で横方向の間隔
 
 	for (int i = 0; i < spriteCount; ++i) {
 		Sprite* s = new Sprite();
@@ -238,6 +235,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		sprites.push_back(s);
 	}
 
+
+	sprite->position_ = { -0.75f, 0.55f };
+	
 	MSG msg{};
 
 
@@ -265,44 +265,46 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::NewFrame();
 
 			ImGui::Begin("Sprite Controls");
-			for (int i = 0; i < sprites.size(); ++i) {
-				Vector2& pos = sprites[i]->position_;
-				// ラベルを動的に生成
-				std::string label = "Sprite " + std::to_string(i) + " Position";
-				ImGui::DragFloat2(label.c_str(), &pos.x, 0.01f, -1.0f, 1.0f, "%.2f");
-			}
+
+			// --- [🚨 修正箇所: 単体の'sprite'の位置を操作できるように変更 🚨] ---
+
+			// 1. 単体のspriteの位置 (position_) を参照
+			Vector2& pos = sprite->position_;
+
+			// 2. ラベルを「Sprite Position」として固定
+			std::string label = "Sprite Position";
+
+			// 3. ImGui::DragFloat2 で位置を操作可能にする
+			//    - pos.x/pos.y: 変更対象のVector2
+			//    - 0.01f: 変化量 (ドラッグ速度)
+			//    - -1.0f, 1.0f: NDC座標系の有効範囲
+			ImGui::DragFloat2(label.c_str(), &pos.x, 0.01f, -1.0f, 1.0f, "%.2f");
 			ImGui::End();
 
 			// ImGui描画
 			ImGui::Render();
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
-			
-			spriteCommon->CommandListCreate();
 
-			dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(sprite->textureIndex));
+			// --- [🚨 追加箇所 1: ImGui後に描画設定をリセット 🚨] ---
+			// ビューポートとシザー矩形をウィンドウ全体に戻す
+			dxCommon->InitializeViewportAndScissorRect(); // ビューポートとシザー矩形の値をメンバに設定
+			dxCommon->InitializeScissorRect();           // コマンドリストにビューポートとシザー矩形を再設定
+			// ----------------------------------------------------
 
-			dxCommon->InitializeViewportAndScissorRect();
-			dxCommon->InitializeScissorRect();
-
-			// 描画ループ
-			for (auto s : sprites) {
-				// ここで各スプライトのテクスチャSRVをセット
-				dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(s->textureIndex));
-				s->Update();
-				s->Draw();
-			}
+			spriteCommon->CommandListCreate(); // RootSignatureとPipelineStateの設定（これは残す）
 
 			// 例: スペースキーでテクスチャ切り替え
 			if (input->TriggerKey(DIK_SPACE)) {
 				sprite->ChangeTexture("resources/monsterBall.png");
 			}
 
+			
 			// 1枚目のspriteも同様に
 			dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(sprite->textureIndex));
 			sprite->Update();
 			sprite->Draw();
 
-            // 描画後処理
+			// 描画後処理
             dxCommon->PostDraw();
         }
     }

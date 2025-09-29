@@ -45,7 +45,44 @@ public:
     Vector2 position_{ 0.0f, 0.0f };
     uint32_t textureIndex = 0;
 
+    // --- [🚨 修正・追加箇所 1: メンバ変数とGetter/Setter 🚨] ---
+    // メンバ変数
+    Vector2 anchorPoint = { 0.5f, 0.5f }; // アンカーポイント (デフォルトは中心)
+    bool isFlipX = false;                 // 左右フリップ
+    bool isFlipY = false;                 // 上下フリップ
+
+    // --- [追加箇所：テクスチャ範囲指定用のメンバ変数] ---
+    Vector2 textureLeftTop = { 0.0f, 0.0f }; // テクスチャ左上座標 (ピクセル単位)
+    Vector2 textureSize = { 100.0f, 100.0f }; // テクスチャ切り出しサイズ (ピクセル単位)
+    // ----------------------------------------------------
+
+    // Getter
+    const Vector2& GetAnchorPoint() const { return anchorPoint; }
+    bool GetFlipX() const { return isFlipX; }
+    bool GetFlipY() const { return isFlipY; }
+
+    // --- [追加箇所：テクスチャ範囲指定用のGetter] ---
+    const Vector2& GetTextureLeftTop() const { return textureLeftTop; }
+    const Vector2& GetTextureSize() const { return textureSize; }
+    // ----------------------------------------------------
+
+    // Setter
+    void SetAnchorPoint(const Vector2& anchorPoint) { this->anchorPoint = anchorPoint; }
+    void SetFlipX(bool isFlip) { isFlipX = isFlip; }
+    void SetFlipY(bool isFlip) { isFlipY = isFlip; }
+
+    // --- [追加箇所：テクスチャ範囲指定用のSetter] ---
+    void SetTextureLeftTop(const Vector2& leftTop) { this->textureLeftTop = leftTop; }
+    void SetTextureSize(const Vector2& size) { this->textureSize = size; }
+    // ----------------------------------------------------
+
+    // --- [🚨 追加箇所 1: AdjustTextureSizeの宣言 🚨] ---
+    // テクスチャサイズをイメージに合わせる
+    void AdjustTextureSize();
+    // ----------------------------------------------------
+
 private:
+
     // 共通部
     SpriteCommon* spriteCommon = nullptr;
 

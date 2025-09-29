@@ -125,3 +125,14 @@ void TextureManager::LoadTexture(const std::string& filePath)
         textureData.resource.Get(), &srvDesc, textureData.srvHandleCPU
     );
 }
+
+// --- [追加箇所：メタデータ取得関数の実装] ---
+const DirectX::TexMetadata& TextureManager::GetMetaData(uint32_t textureIndex) {
+    // 範囲外指定違反チェック
+    assert(textureIndex < textureDatas.size());
+
+    // テクスチャデータの参照を取得し、メタデータを返す
+    const TextureData& textureData = textureDatas[textureIndex];
+    return textureData.metadata;
+}
+// ---------------------------------------------

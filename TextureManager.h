@@ -49,6 +49,14 @@ public:
     /// <returns>画像イメージデータ</returns>
     void LoadTexture(const std::string& filePath);
 
+
+    // --- [追加箇所：メタデータ取得関数] ---
+    /// <summary>
+    /// テクスチャのメタデータ（幅、高さなど）を取得
+    /// </summary>
+    const DirectX::TexMetadata& GetMetaData(uint32_t textureIndex);
+    // -------------------------------------
+
     // テクスチャ番号取得
     uint32_t GetTextureIndexByFilePath(const std::string& filePath);
     // GPUハンドル取得
