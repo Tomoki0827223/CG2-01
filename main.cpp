@@ -9,9 +9,9 @@
 #include "TextureManager.h"
 #include "Object3dCommon.h"
 #include "Object3d.h"
-#include "ModelCommon.h" // 追記
-#include "Model.h"       // 追記
-#include "ModelManager.h" // 追記
+#include "ModelCommon.h"
+#include "Model.h"
+#include "ModelManager.h"
 #include "D3DResourceLeakChecker.h"
 #include "Input.h"
 #include "Vector2.h"
@@ -26,36 +26,6 @@
 #include "affine.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
-
-
-
-struct TransformVector3
-{
-	Vector3 scale;
-	Vector3 rotate;
-	Vector3 translate;
-
-};
-
-struct DirectionaLight
-{
-	Vector4 color;
-	Vector3 direction;
-	float intensity;
-};
-
-struct Transform1 {
-	Vector3 scale;
-	Vector3 rotate;
-	Vector3 translate;
-};
-
-
-Transform1 uvTransformSprite{
-	{1.0f, 1.0f, 1.0f},
-	{0.0f, 0.0f, 0.0f},
-	{0.0f, 0.0f, 0.0f},
-};
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//D3DResourceLeakChecker LeakCheak;
@@ -124,12 +94,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #pragma endregion
 
 	bool useMonsterBall = false;
-
-	TransformVector3 transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-
 	//Resourcef
 	const uint32_t kSubdivision = 36;
-
 	// 複数Sprite生成
 	std::vector<Sprite*> sprites;
 	const int spriteCount = 5;
@@ -142,12 +108,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		sprites.push_back(s);
 	}
 
-
 	sprite->position_ = { -0.75f, 0.55f };
-	
 	MSG msg{};
-
-
 	dxCommon->InitializeImGui();
 
 	while (true)
@@ -160,9 +122,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{
 			// GE3
 			input->Update();
-
 			// ゲーム処理
-
 			// 描画前処理
 			dxCommon->PreDraw();
 
@@ -171,10 +131,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui_ImplDX12_NewFrame();
 			ImGui::NewFrame();
 
-			ImGui::Begin("Controls"); // 👈 ウィンドウ名を修正
-
-			// --- [🚨 修正箇所 1: Object3d の回転操作 🚨] ---
-			// Object3d* object3d の transform.rotate メンバを参照
+			ImGui::Begin("Controls");
 			Vector3& rot = object3d->transform.rotate;
 
 			// ImGui::DragFloat3 で回転角度を操作可能にする (rad)
@@ -190,8 +147,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 2. ImGui::DragFloat2 で位置を操作可能にする (NDC座標系)
 			ImGui::DragFloat2(label.c_str(), &pos.x, 0.01f, -1.0f, 1.0f, "%.2f");
-			// --------------------------------------------------
-
 			ImGui::End(); // 👈 ImGuiブロックの終了
 
 			// ImGui描画
