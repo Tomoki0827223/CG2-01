@@ -6,6 +6,8 @@
 #include <sstream>
 #include <cassert>
 #include <algorithm>
+#include "Object3d.h"
+#include "ModelManager.h"
 
 // --- LoadMaterialTemplateFileの定義 (Object3d.cppから移植) ---
 Model::MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
@@ -99,16 +101,21 @@ Model::ModelData Model::LoadObjFile(const std::string& directoryPath, const std:
     return modelData;
 }
 
+// --- SetModelのオーバーロードを実装 ---
+void Object3d::SetModel(const std::string& filePath)
+{
+    // ModelManagerからファイルを検索してセット
+    model = ModelManager::GetInstance()->FindModel(filePath);
+}
 
-// --- Initialize (Object3d.cppから移植) ---
-void Model::Initialize(ModelCommon* modelCommon)
+
+void Model::Initialize(ModelCommon* modelCommon, const std::string& directoryPath, const std::string& filename)
 {
     // ModelCommonのポインタを引数からメンバ変数に記録する
     this->modelCommon_ = modelCommon;
 
-    // 1. モデル読み込み
-    modelData = LoadObjFile("resources", "plane.obj");
-    //modelData = LoadObjFile("resources", "axis.obj");
+    // 1. モデル読み込み: 引数で渡されたディレクトリとファイル名を使う
+    modelData = LoadObjFile(directoryPath, filename);
 
     // 2. テクスチャのロードとインデックス取得
     if (!modelData.material.textureFilePath.empty()) {
@@ -122,6 +129,7 @@ void Model::Initialize(ModelCommon* modelCommon)
     CreateVertexData();     // 頂点データ初期化
     CreateMaterialData();   // マテリアル初期化
 }
+
 
 
 // --- Draw (Object3d.cppから移植。モデル固有の処理のみ) ---

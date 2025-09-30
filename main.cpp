@@ -11,6 +11,7 @@
 #include "Object3d.h"
 #include "ModelCommon.h" // 追記
 #include "Model.h"       // 追記
+#include "ModelManager.h" // 追記
 #include "D3DResourceLeakChecker.h"
 #include "Input.h"
 #include "Vector2.h"
@@ -73,26 +74,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dxCommon = new DirectXCommon();
 	dxCommon->Initialize(winApp_);
 
-	// 1. TextureManagerの初期化を最優先で実行する
+	// 1. TextureManagerの初期化
 	TextureManager::GetInstance()->Initialize(dxCommon);
+	ModelManager::GetInstance()->Initialize(dxCommon);
+
+	ModelManager::GetInstance()->LoadModel("plane.obj"); // 読み込む
+	ModelManager::GetInstance()->LoadModel("axis.obj"); // 読み込む
 
 	// 2. Object3dCommonの生成と初期化
 	Object3dCommon* object3dCommon = nullptr;
 	object3dCommon = new Object3dCommon();
 	object3dCommon->Initialize(dxCommon);
 
-	// --- 【追加】ModelCommonの生成と初期化 ---
-	ModelCommon* modelCommon = nullptr;
-	modelCommon = new ModelCommon();
-	modelCommon->Initialize(dxCommon);
-	// -------------------------------------------
-
-	// --- 【追加】Modelの生成と初期化 (テクスチャロードもこの中) ---
-	Model* planeModel = nullptr;
-	planeModel = new Model();
-	// ObjファイルパスはModel::Initialize内でハードコードされている前提
-	planeModel->Initialize(modelCommon);
-	// -------------------------------------------
 
 	Object3d* object3d = nullptr; // 👈 最初の宣言 (83行目付近)
 	object3d = new Object3d(); // 👈 割り当て
@@ -100,16 +93,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// ----------------------------------------------------------------------
 
 	// --- 【追加】Object3dにModelを設定 ---
-	object3d->SetModel(planeModel);
+	object3d->SetModel("plane.obj");
 	// ------------------------------------
 
-	// --- 【追加】同じモデルで2つ目のオブジェクトを作成（動作確認用） ---
+	// --- 2つ目のオブジェクト（使用例） ---
 	Object3d* object3d_2 = nullptr;
 	object3d_2 = new Object3d();
 	object3d_2->Initialize(object3dCommon);
-	object3d_2->SetModel(planeModel); // 👈 同じModelポインタを設定
-	object3d_2->SetTranslate({ 3.0f, 0.0f, 0.0f }); // 👈 位置をずらす
-	// ------------------------------------------------------------------
+	object3d_2->SetModel("axis.obj"); // 2つ目のオブジェクトにも同じモデルを設定
+	object3d_2->SetTranslate({ 3.0f, 0.0f, 0.0f });
+	// ------------------------------------
 
 	// 4. SpriteCommonの生成と初期化
 	SpriteCommon* spriteCommon = nullptr;
@@ -245,6 +238,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//Windows終了
 	winApp_->Finalize();
 	TextureManager::GetInstance()->Finalize();
+	ModelManager::GetInstance()->Finalize();
 
 	delete input;
 	delete winApp_;
@@ -252,9 +246,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete spriteCommon;
 	delete object3dCommon;
 	delete object3d;
-	delete object3d_2; // 追記
-	delete planeModel; // 追記
-	delete modelCommon; // 追記
+	delete object3d_2;
 
 	return 0;
 }

@@ -45,7 +45,7 @@ public:
     };
 
     // --- メンバ関数 ---
-    void Initialize(ModelCommon* modelCommon); // 初期化
+    void Initialize(ModelCommon* modelCommon, const std::string& directoryPath, const std::string& filename);
     void Draw();                               // 描画
 
     // --- Objファイル読み込み関数を静的メンバ関数として移植（Object3d.hから移行） ---

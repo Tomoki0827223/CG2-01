@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <string>
 #include "Vector4.h" // 頂点データ用
 #include "Vector2.h" // 頂点データ用
 #include "Vector3.h" // 頂点データ用
@@ -83,8 +84,8 @@ public:
     Transform transform;      // オブジェクトのスケール、回転、移動
     Transform cameraTransform; // カメラのスケール、回転、移動
 
-    // --- 【追加】ModelへのポインタとSetModel ---
-    void SetModel(Model* model) { this->model = model; } // Setter
+    // ファイルパスを引数に取るSetModelのオーバーロード
+    void SetModel(const std::string& filePath);
 
     // --- 【追加】TransformのSetter/Getter (自分で考えよう部分) ---
     void SetScale(const Vector3& scale) { transform.scale = scale; }
