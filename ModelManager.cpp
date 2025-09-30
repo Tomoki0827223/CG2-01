@@ -1,7 +1,8 @@
 #include "ModelManager.h"
 #include "Logger.h"
 #include <cassert>
-#include <utility> // std::move, std::make_pair
+#include <utility>
+
 
 // 静的メンバの初期化
 ModelManager* ModelManager::instance = nullptr;
