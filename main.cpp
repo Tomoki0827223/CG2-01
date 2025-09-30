@@ -9,6 +9,8 @@
 #include "TextureManager.h"
 #include "Object3dCommon.h"
 #include "Object3d.h"
+#include "ModelCommon.h" // 追記
+#include "Model.h"       // 追記
 #include "D3DResourceLeakChecker.h"
 #include "Input.h"
 #include "Vector2.h"
@@ -79,10 +81,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3dCommon = new Object3dCommon();
 	object3dCommon->Initialize(dxCommon);
 
+	// --- 【追加】ModelCommonの生成と初期化 ---
+	ModelCommon* modelCommon = nullptr;
+	modelCommon = new ModelCommon();
+	modelCommon->Initialize(dxCommon);
+	// -------------------------------------------
+
+	// --- 【追加】Modelの生成と初期化 (テクスチャロードもこの中) ---
+	Model* planeModel = nullptr;
+	planeModel = new Model();
+	// ObjファイルパスはModel::Initialize内でハードコードされている前提
+	planeModel->Initialize(modelCommon);
+	// -------------------------------------------
+
 	Object3d* object3d = nullptr; // 👈 最初の宣言 (83行目付近)
 	object3d = new Object3d(); // 👈 割り当て
 	object3d->Initialize(object3dCommon);
 	// ----------------------------------------------------------------------
+
+	// --- 【追加】Object3dにModelを設定 ---
+	object3d->SetModel(planeModel);
+	// ------------------------------------
+
+	// --- 【追加】同じモデルで2つ目のオブジェクトを作成（動作確認用） ---
+	Object3d* object3d_2 = nullptr;
+	object3d_2 = new Object3d();
+	object3d_2->Initialize(object3dCommon);
+	object3d_2->SetModel(planeModel); // 👈 同じModelポインタを設定
+	object3d_2->SetTranslate({ 3.0f, 0.0f, 0.0f }); // 👈 位置をずらす
+	// ------------------------------------------------------------------
 
 	// 4. SpriteCommonの生成と初期化
 	SpriteCommon* spriteCommon = nullptr;
@@ -191,6 +218,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			object3d->Update();
 			object3d->Draw();
 
+			// 2つ目のオブジェクトを描画
+			object3d_2->Update();
+			object3d_2->Draw();
+
 			// 2D（Sprite）の描画準備 (3D描画後に行う)
 			spriteCommon->CommandListCreate();
 
@@ -221,6 +252,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete spriteCommon;
 	delete object3dCommon;
 	delete object3d;
+	delete object3d_2; // 追記
+	delete planeModel; // 追記
+	delete modelCommon; // 追記
 
 	return 0;
 }

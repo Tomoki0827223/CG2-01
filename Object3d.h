@@ -1,4 +1,3 @@
-// Object3d.h (新規作成)
 #pragma once
 #include <wrl.h>
 #include <d3d12.h>
@@ -9,9 +8,11 @@
 #include "Vector2.h" // 頂点データ用
 #include "Vector3.h" // 頂点データ用
 #include "Matrix4x4.h" // 変換行列用
+#include "Model.h"
 
 // 前方宣言: Object3dCommonへのポインタを持つため
 class Object3dCommon;
+class Model;
 
 class Object3d
 {
@@ -82,22 +83,22 @@ public:
     Transform transform;      // オブジェクトのスケール、回転、移動
     Transform cameraTransform; // カメラのスケール、回転、移動
 
+    // --- 【追加】ModelへのポインタとSetModel ---
+    void SetModel(Model* model) { this->model = model; } // Setter
+
+    // --- 【追加】TransformのSetter/Getter (自分で考えよう部分) ---
+    void SetScale(const Vector3& scale) { transform.scale = scale; }
+    void SetRotate(const Vector3& rotate) { transform.rotate = rotate; }
+    void SetTranslate(const Vector3& translate) { transform.translate = translate; }
+    const Vector3& GetScale() const { return transform.scale; }
+    const Vector3& GetRotate() const { return transform.rotate; }
+    const Vector3& GetTranslate() const { return transform.translate; }
+
 private:
+    
     // --- 共通部ポインタ ---
     Object3dCommon* object3dCommon = nullptr; //
-
-    // --- Objファイルからのデータ ---
-    ModelData modelData; //
-
-    // --- 頂点データ管理 ---
-    // Spriteと違い、Objファイルは頂点リストなのでIndexBufferは不要
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource; // VertexBuffer
-    VertexData* vertexData = nullptr;                     // バッファ内のデータポインタ
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};           // VertexBufferView
-
-    // --- マテリアルデータ管理 ---
-    Microsoft::WRL::ComPtr<ID3D12Resource> materialResource; // マテリアルリソース
-    Material* materialData = nullptr;                       // データポインタ
+    Model* model = nullptr;
 
     // --- 座標変換行列データ管理 ---
     Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource; // 座標変換行列リソース
@@ -107,10 +108,6 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource; // 平行光源リソース
     DirectionalLight* directionalLightData = nullptr;                 // データポインタ
 
-
-    // --- 内部処理関数 (リソース作成を private 関数に分割) ---
-    void CreateVertexData(); // 頂点データ作成
-    void CreateMaterialData(); // マテリアルリソース作成
     void CreateTransformationMatrixData(); // 座標変換行列リソース作成
     void CreateDirectionalLightData(); // 平行光源リソース作成
 
