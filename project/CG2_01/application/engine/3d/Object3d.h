@@ -14,6 +14,7 @@
 // 前方宣言: Object3dCommonへのポインタを持つため
 class Object3dCommon;
 class Model;
+class Camera;
 
 class Object3d
 {
@@ -82,7 +83,7 @@ public:
 
 
     Transform transform;      // オブジェクトのスケール、回転、移動
-    Transform cameraTransform; // カメラのスケール、回転、移動
+    //Transform cameraTransform; // カメラのスケール、回転、移動
 
     // ファイルパスを引数に取るSetModelのオーバーロード
     void SetModel(const std::string& filePath);
@@ -94,6 +95,8 @@ public:
     const Vector3& GetScale() const { return transform.scale; }
     const Vector3& GetRotate() const { return transform.rotate; }
     const Vector3& GetTranslate() const { return transform.translate; }
+
+    Camera* camera = nullptr;
 
 private:
     
@@ -111,5 +114,7 @@ private:
 
     void CreateTransformationMatrixData(); // 座標変換行列リソース作成
     void CreateDirectionalLightData(); // 平行光源リソース作成
+
+    void SetCamera(Camera* camera) { this->camera = camera; }
 
 };

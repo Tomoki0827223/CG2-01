@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CG2_01\application\engine\io\affine.cpp" />
     <ClCompile Include="CG2_01\application\engine\base\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="CG2_01\application\engine\base\DirectXCommon.cpp" />
@@ -36,6 +37,7 @@
     <ClCompile Include="CG2_01\application\engine\base\WinApp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="CG2_01\application\engine\io\affine.h" />
     <ClInclude Include="CG2_01\application\engine\base\D3DResourceLeakChecker.h" />
     <ClInclude Include="CG2_01\application\engine\base\DirectXCommon.h" />

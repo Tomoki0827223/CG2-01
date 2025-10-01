@@ -102,6 +102,9 @@
     <ClCompile Include="CG2_01\application\engine\base\StringUitilty.cpp">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imstb_truetype.h">
@@ -190,6 +193,9 @@
     </ClInclude>
     <ClInclude Include="CG2_01\application\engine\base\resource.h">
       <Filter>ソース ファイル\engine\base</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

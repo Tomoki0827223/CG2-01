@@ -5,6 +5,7 @@
 // 前方宣言
 class DirectXCommon;
 
+class Camera; // Cameraクラスの前方宣言
 class Object3dCommon
 {
 public:
@@ -21,6 +22,10 @@ public:
 	// 毎フレーム、3Dオブジェクト個別の描画前に呼び出す描画ルール設定
 	void SetCommand(); // スライドの「共通描画設定()」に相当
 
+	// --- 【追加】デフォルトカメラのSetter/Getter (スライド「デフォルトカメラ」) ---
+	void SetDefaultCamera(Camera* camera) { this->defaultCamera = camera; }
+	Camera* GetDefaultCamera() const { return defaultCamera; }
+
 private:
 
 	// --- [依存と共通データ] ---
@@ -35,4 +40,6 @@ private:
 	// ルートシグネチャの作成とパイプラインの生成を関数化
 	void CreateRootSignature(); // ルートシグネチャの作成() に相当
 	void CreatePipelineState(); // グラフィックスパイプラインの生成() に相当
+
+	Camera* defaultCamera = nullptr;
 };

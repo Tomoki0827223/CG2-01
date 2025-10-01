@@ -24,6 +24,7 @@
 #include <vector>
 #include <string>
 #include "affine.h"
+#include "Camera.h" 
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
 
@@ -51,21 +52,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	ModelManager::GetInstance()->LoadModel("plane.obj"); // 読み込む
 	ModelManager::GetInstance()->LoadModel("axis.obj"); // 読み込む
+	ModelManager::GetInstance()->LoadModel("multiMesh.obj"); // 読み込む
 
 	// 2. Object3dCommonの生成と初期化
 	Object3dCommon* object3dCommon = nullptr;
 	object3dCommon = new Object3dCommon();
 	object3dCommon->Initialize(dxCommon);
 
+	// --- 【追加】カメラの生成と設定 (スライド「オブジェクトにセットする」) ---
+	Camera* camera = new Camera();
 
-	Object3d* object3d = nullptr; // 👈 最初の宣言 (83行目付近)
-	object3d = new Object3d(); // 👈 割り当て
-	object3d->Initialize(object3dCommon);
+	// カメラの初期位置を設定 (例: 後ろに-10.0f移動)
+	camera->SetTranslate({ 0.0f, 0.0f, -10.0f });
+	// object3dCommonにデフォルトカメラとしてセット
+	object3dCommon->SetDefaultCamera(camera);
 	// ----------------------------------------------------------------------
 
-	// --- 【追加】Object3dにModelを設定 ---
-	object3d->SetModel("plane.obj");
-	// ------------------------------------
+	Object3d* object3d = nullptr;
+	object3d = new Object3d();
+	// Initialize内で Object3dCommon->GetDefaultCamera() が呼ばれ、cameraがセットされる
+	object3d->Initialize(object3dCommon);
+	object3d->SetModel("multiMesh.obj"); // モデルを設定
+	object3d->SetTranslate({ -3.0f, 0.0f, 0.0f });
 
 	// --- 2つ目のオブジェクト（使用例） ---
 	Object3d* object3d_2 = nullptr;
@@ -123,6 +131,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{
 			// GE3
 			input->Update();
+
+			camera->Update();
+
 			// ゲーム処理
 			// 描画前処理
 			dxCommon->PreDraw();
@@ -133,6 +144,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::NewFrame();
 
 			ImGui::Begin("Controls");
+
+			// --- [🚨 修正点 2: Camera::Transform へのアクセスを GetTransform() 経由にする 🚨] ---
+			// 構造体への直接アクセスを避けるため、GetTransform() を使用する
+			Camera::Transform& camTransform = camera->GetTransform();
+			ImGui::DragFloat3("Camera Translate", &camTransform.translate.x, 0.1f, -10.0f, 10.0f, "%.2f");
+			ImGui::DragFloat3("Camera Rotate (rad)", &camTransform.rotate.x, 0.01f, -6.28f, 6.28f, "%.2f");
+			// --------------------------------------------------
+
+
 			Vector3& rot = object3d->transform.rotate;
 
 			// ImGui::DragFloat3 で回転角度を操作可能にする (rad)
@@ -203,6 +223,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete spriteCommon;
 	delete object3dCommon;
 	delete object3d;
+	delete camera;
 	delete object3d_2;
 
 	return 0;

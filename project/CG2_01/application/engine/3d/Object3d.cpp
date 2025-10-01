@@ -1,6 +1,7 @@
 #include "Object3d.h"
 #include "Object3dCommon.h" // Object3dCommonの関数呼び出しのためにインクルード
 #include "DirectXCommon.h" // リソース作成のために必要
+#include "Camera.h"
 #include <fstream>
 #include <sstream>
 #include <cassert>
@@ -10,51 +11,45 @@ void Object3d::Initialize(Object3dCommon* object3dCommon)
 {
     this->object3dCommon = object3dCommon;
 
-    // --- 【修正】モデル読み込みとリソース作成の処理はModelに移行したため削除 ---
-    // modelData = LoadObjFile(...); // 削除
-    // if (!modelData.material.textureFilePath.empty()) { ... } // 削除
-
     // Object Transformの初期設定
     transform = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
-    // Camera Transformの初期設定
-    cameraTransform = { {1.0f, 1.0f, 1.0f}, {0.3f, 0.0f, 0.0f}, {0.0f, 4.0f, -10.0f} };
+    // Camera Transformの初期設定 (Cameraクラスに移行するため、削除/コメントアウトを推奨)
+    // cameraTransform = { {1.0f, 1.0f, 1.0f}, {0.3f, 0.0f, 0.0f}, {0.0f, 4.0f, -10.0f} };
+
+    // --- 【追加】デフォルトカメラをセット (スライド「オブジェクトにセットする」) ---
+    this->camera = object3dCommon->GetDefaultCamera();
 
     // 2. 各種リソースの作成（Object3dに残るもののみ）
-    // CreateVertexData();     // 削除
-    // CreateMaterialData();   // 削除
     CreateTransformationMatrixData();
     CreateDirectionalLightData();
 }
-
 
 void Object3d::Update()
 {
     // 修正案: 1/10の速度にする
     transform.rotate.y += 0.01f;
 
-    // --- [🚨 追加箇所 5: World-View-Projection行列の計算 🚨] ---
+    // --- [🚨 修正箇所: World-View-Projection行列の計算 🚨] ---
+
     // 1. TransformからWorldMatrixを作る
     Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+    Matrix4x4 worldViewProjectionMatrix;
 
-    // 2. cameraTransformからCameraMatrixを作る
-    Matrix4x4 cameraMatrix = MakeAffineMatrix(
-        cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate
-    );
-
-    // 3. cameraMatrixからViewMatrixを作る
-    Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-
-    // 4. ProjectionMatrixを作る (ここでは透視投影)
-    Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(
-        0.45f, (float)WinApp::kClientWidth / (float)WinApp::kClientHeight, 0.1f, 100.0f
-    );
-    // ※ WinApp::kClientWidth/kClientHeight にアクセスできる必要があります。
+    // 2. カメラがセットされているかチェックし、WVP行列を計算 (スライド「オブジェクトの更新処理」)
+    if (camera) {
+        // カメラからViewProjection行列を取得
+        const Matrix4x4& viewProjectionMatrix = camera->GetViewProjectionMatrix();
+        // WVP行列を計算: World * ViewProjection
+        worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
+    }
+    else {
+        // カメラがない場合は、ワールド行列をそのままWVPとする
+        worldViewProjectionMatrix = worldMatrix;
+    }
 
     // 5. 結果をTransformationMatrixDataに書き込む
-    transformationMatrixData->WVP = Multiply(
-        worldMatrix, Multiply(viewMatrix, projectionMatrix)
-    );
+    transformationMatrixData->WVP = worldViewProjectionMatrix;
     transformationMatrixData->World = worldMatrix;
     // ----------------------------------------------------------------------
 }
