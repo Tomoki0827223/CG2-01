@@ -57,49 +57,49 @@
     <ClCompile Include="externals\imgui\imgui.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="Object3d.cpp">
+    <ClCompile Include="CG2_01\application\engine\3d\Object3d.cpp">
       <Filter>ソース ファイル\engine\3d</Filter>
     </ClCompile>
-    <ClCompile Include="Object3dCommon.cpp">
+    <ClCompile Include="CG2_01\application\engine\3d\Object3dCommon.cpp">
       <Filter>ソース ファイル\engine\3d</Filter>
     </ClCompile>
-    <ClCompile Include="ModelManager.cpp">
+    <ClCompile Include="CG2_01\application\engine\3d\ModelManager.cpp">
       <Filter>ソース ファイル\engine\3d</Filter>
     </ClCompile>
-    <ClCompile Include="ModelCommon.cpp">
+    <ClCompile Include="CG2_01\application\engine\3d\ModelCommon.cpp">
       <Filter>ソース ファイル\engine\3d</Filter>
     </ClCompile>
-    <ClCompile Include="Model.cpp">
+    <ClCompile Include="CG2_01\application\engine\2d\Model.cpp">
       <Filter>ソース ファイル\engine\3d</Filter>
     </ClCompile>
-    <ClCompile Include="TextureManager.cpp">
+    <ClCompile Include="CG2_01\application\engine\2d\TextureManager.cpp">
       <Filter>ソース ファイル\engine\2d</Filter>
     </ClCompile>
-    <ClCompile Include="Sprite.cpp">
+    <ClCompile Include="CG2_01\application\engine\2d\Sprite.cpp">
       <Filter>ソース ファイル\engine\2d</Filter>
     </ClCompile>
-    <ClCompile Include="SpriteCommon.cpp">
+    <ClCompile Include="CG2_01\application\engine\2d\SpriteCommon.cpp">
       <Filter>ソース ファイル\engine\2d</Filter>
     </ClCompile>
-    <ClCompile Include="affine.cpp">
+    <ClCompile Include="CG2_01\application\engine\io\affine.cpp">
       <Filter>ソース ファイル\engine\math</Filter>
     </ClCompile>
-    <ClCompile Include="D3DResourceLeakChecker.cpp">
+    <ClCompile Include="CG2_01\application\engine\base\D3DResourceLeakChecker.cpp">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClCompile>
-    <ClCompile Include="DirectXCommon.cpp">
+    <ClCompile Include="CG2_01\application\engine\base\DirectXCommon.cpp">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClCompile>
-    <ClCompile Include="Input.cpp">
+    <ClCompile Include="CG2_01\application\engine\base\Input.cpp">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClCompile>
-    <ClCompile Include="WinApp.cpp">
+    <ClCompile Include="CG2_01\application\engine\base\WinApp.cpp">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClCompile>
-    <ClCompile Include="Logger.cpp">
+    <ClCompile Include="CG2_01\application\engine\base\Logger.cpp">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClCompile>
-    <ClCompile Include="StringUitilty.cpp">
+    <ClCompile Include="CG2_01\application\engine\base\StringUitilty.cpp">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClCompile>
   </ItemGroup>
@@ -128,67 +128,67 @@
     <ClInclude Include="externals\imgui\imconfig.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="Object3d.h">
+    <ClInclude Include="CG2_01\application\engine\3d\Object3d.h">
       <Filter>ソース ファイル\engine\3d</Filter>
     </ClInclude>
-    <ClInclude Include="Object3dCommon.h">
+    <ClInclude Include="CG2_01\application\engine\3d\Object3dCommon.h">
       <Filter>ソース ファイル\engine\3d</Filter>
     </ClInclude>
-    <ClInclude Include="ModelManager.h">
+    <ClInclude Include="CG2_01\application\engine\3d\ModelManager.h">
       <Filter>ソース ファイル\engine\3d</Filter>
     </ClInclude>
-    <ClInclude Include="ModelCommon.h">
+    <ClInclude Include="CG2_01\application\engine\3d\ModelCommon.h">
       <Filter>ソース ファイル\engine\3d</Filter>
     </ClInclude>
-    <ClInclude Include="Model.h">
+    <ClInclude Include="CG2_01\application\engine\3d\Model.h">
       <Filter>ソース ファイル\engine\3d</Filter>
     </ClInclude>
-    <ClInclude Include="TextureManager.h">
+    <ClInclude Include="CG2_01\application\engine\2d\TextureManager.h">
       <Filter>ソース ファイル\engine\2d</Filter>
     </ClInclude>
-    <ClInclude Include="SpriteCommon.h">
+    <ClInclude Include="CG2_01\application\engine\2d\SpriteCommon.h">
       <Filter>ソース ファイル\engine\2d</Filter>
     </ClInclude>
-    <ClInclude Include="Sprite.h">
+    <ClInclude Include="CG2_01\application\engine\2d\Sprite.h">
       <Filter>ソース ファイル\engine\2d</Filter>
     </ClInclude>
-    <ClInclude Include="Vector4.h">
+    <ClInclude Include="CG2_01\application\engine\io\Vector4.h">
       <Filter>ソース ファイル\engine\math</Filter>
     </ClInclude>
-    <ClInclude Include="Vector3.h">
+    <ClInclude Include="CG2_01\application\engine\io\Vector3.h">
       <Filter>ソース ファイル\engine\math</Filter>
     </ClInclude>
-    <ClInclude Include="Vector2.h">
+    <ClInclude Include="CG2_01\application\engine\io\Vector2.h">
       <Filter>ソース ファイル\engine\math</Filter>
     </ClInclude>
-    <ClInclude Include="Matrix4x4.h">
+    <ClInclude Include="CG2_01\application\engine\io\Matrix4x4.h">
       <Filter>ソース ファイル\engine\math</Filter>
     </ClInclude>
-    <ClInclude Include="Matrix3x3.h">
+    <ClInclude Include="CG2_01\application\engine\io\Matrix3x3.h">
       <Filter>ソース ファイル\engine\math</Filter>
     </ClInclude>
-    <ClInclude Include="affine.h">
+    <ClInclude Include="CG2_01\application\engine\io\affine.h">
       <Filter>ソース ファイル\engine\math</Filter>
     </ClInclude>
-    <ClInclude Include="D3DResourceLeakChecker.h">
+    <ClInclude Include="CG2_01\application\engine\base\D3DResourceLeakChecker.h">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClInclude>
-    <ClInclude Include="DirectXCommon.h">
+    <ClInclude Include="CG2_01\application\engine\base\DirectXCommon.h">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClInclude>
-    <ClInclude Include="Input.h">
+    <ClInclude Include="CG2_01\application\engine\base\Input.h">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClInclude>
-    <ClInclude Include="WinApp.h">
+    <ClInclude Include="CG2_01\application\engine\base\WinApp.h">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClInclude>
-    <ClInclude Include="Logger.h">
+    <ClInclude Include="CG2_01\application\engine\base\Logger.h">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClInclude>
-    <ClInclude Include="StringUitilty.h">
+    <ClInclude Include="CG2_01\application\engine\base\StringUitilty.h">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="CG2_01\application\engine\base\resource.h">
       <Filter>ソース ファイル\engine\base</Filter>
     </ClInclude>
   </ItemGroup>
