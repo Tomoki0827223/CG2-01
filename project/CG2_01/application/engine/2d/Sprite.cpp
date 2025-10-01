@@ -6,33 +6,29 @@
 void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath) {
 
     this->spriteCommon = spriteCommon;
+    this->filePath_ = textureFilePath; // ★追加: ファイルパスを記録
 
-    // 1. テクスチャインデックスを取得
-    textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+    // 1. テクスチャインデックスを取得 (関数名を変更)
+    textureIndex = TextureManager::GetInstance()->GetSrvIndexByFilePath(textureFilePath); // ★変更
 
     // 2. 頂点データ、マテリアルデータ、座標変換行列データ作成 (既存の処理)
     CreateVertexData();
     CreateMaterialData();
     CreateTransformationMatrixData();
 
-    // --- [🚨 修正箇所 3: Initialize内でAdjustTextureSizeを呼び出す 🚨] ---
     // テクスチャサイズを画像に合わせて設定
     AdjustTextureSize();
-    // ----------------------------------------------------------------------
 }
 
 // --- [🚨 追加箇所 2: AdjustTextureSizeの実装 🚨] ---
 void Sprite::AdjustTextureSize()
 {
-    // テクスチャメタデータを取得
-    const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(textureIndex);
+    // テクスチャメタデータを取得 (ファイルパスを引数として渡す)
+    const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(filePath_); // ★変更
 
     // 切り出しサイズを画像サイズに合わせる
-    // (textureSize が切り出しサイズとスプライトの描画サイズの両方を兼ねていると仮定)
     textureSize.x = static_cast<float>(metadata.width);
     textureSize.y = static_cast<float>(metadata.height);
-
-    // ※ スライドの指示 に従って textureSize を設定
 }
 
 void Sprite::CreateVertexData()
@@ -150,8 +146,10 @@ void Sprite::Update()
     // --- 2. 描画サイズの調整 (アスペクト比の計算とウィンドウ補正) ---
 
     const float kDefaultSizeNDC = 0.5f; // 描画サイズ基準 (NDC座標系)
+
+    // 【★重要修正★】textureIndexではなくfilePath_を渡す
     const DirectX::TexMetadata& metadata =
-        TextureManager::GetInstance()->GetMetaData(textureIndex);
+        TextureManager::GetInstance()->GetMetaData(filePath_); // ★修正
 
     // 1. テクスチャの解像度に基づくアスペクト比
     float textureAspectRatio = (float)metadata.width / (float)metadata.height;
@@ -225,7 +223,7 @@ void Sprite::Draw()
 
     // SRVDescriptorTableの先頭を設定（変更点）
     commandList->SetGraphicsRootDescriptorTable(
-        2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex)
+        2, TextureManager::GetInstance()->GetSrvHandleGPUByFilePath(filePath_) // ★変更
     );
 
     // 描画コール
@@ -235,6 +233,8 @@ void Sprite::Draw()
 void Sprite::ChangeTexture(const std::string& textureFilePath) {
     // テクスチャが未ロードならロード
     TextureManager::GetInstance()->LoadTexture(textureFilePath);
-    // テクスチャ番号を更新
-    textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+    // テクスチャ番号とファイルパスを更新
+    filePath_ = textureFilePath; // ★追加
+    textureIndex = TextureManager::GetInstance()->GetSrvIndexByFilePath(textureFilePath); // ★変更
+    AdjustTextureSize(); // ★追加: テクスチャが変わったらサイズも更新
 }

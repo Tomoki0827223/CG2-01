@@ -122,7 +122,7 @@ void Model::Initialize(ModelCommon* modelCommon, const std::string& directoryPat
         TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
 
         modelData.material.textureIndex =
-            TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
+            TextureManager::GetInstance()->GetSrvIndexByFilePath(modelData.material.textureFilePath); // ★変更
     }
 
     // 3. 各種リソースの作成（CreateVertexDataなど）
@@ -149,7 +149,7 @@ void Model::Draw()
 
     // 3. SRVのDescriptorTableの先頭を設定 (RootParameter 2)
     commandList->SetGraphicsRootDescriptorTable(
-        2, textureManager->GetSrvHandleGPU(modelData.material.textureIndex)
+        2, textureManager->GetSrvHandleGPUByFilePath(modelData.material.textureFilePath) // ★変更: ファイルパスでアクセス
     );
 
     // NOTE: RootParameter 3 (Light) はObject3d::Draw()側で設定

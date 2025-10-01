@@ -45,6 +45,8 @@ public:
     Vector2 position_{ 0.0f, 0.0f };
     uint32_t textureIndex = 0;
 
+    std::string filePath_; // ★追加: ファイルパスを保持
+
     // --- [🚨 修正・追加箇所 1: メンバ変数とGetter/Setter 🚨] ---
     // メンバ変数
     Vector2 anchorPoint = { 0.5f, 0.5f }; // アンカーポイント (デフォルトは中心)

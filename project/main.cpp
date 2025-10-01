@@ -7,6 +7,7 @@
 #include "SpriteCommon.h"
 #include "Sprite.h"
 #include "TextureManager.h"
+#include "SrvManager.h"
 #include "Object3dCommon.h"
 #include "Object3d.h"
 #include "ModelCommon.h"
@@ -46,8 +47,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dxCommon = new DirectXCommon();
 	dxCommon->Initialize(winApp_);
 
-	// 1. TextureManagerの初期化
-	TextureManager::GetInstance()->Initialize(dxCommon);
+	// SRVManagerの生成と初期化
+	SrvManager* srvManager = nullptr; // ★追加
+	srvManager = new SrvManager(); // ★追加
+	srvManager->Initialize(dxCommon); // ★追加
+
+	// 1. TextureManagerの初期化 (srvManagerを渡す)
+	TextureManager::GetInstance()->Initialize(dxCommon, srvManager); // ★変更：srvManagerを渡す
+	// ModelManagerのInitializeも同様にsrvManagerが必要な場合は変更が必要
 	ModelManager::GetInstance()->Initialize(dxCommon);
 
 	ModelManager::GetInstance()->LoadModel("plane.obj"); // 読み込む
@@ -137,53 +144,40 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// ゲーム処理
 			// 描画前処理
-			dxCommon->PreDraw();
+			dxCommon->PreDraw(); // RTV/DSVの設定のみ
+			// srvManager->PreDraw(); // 1回目のSrvManagerヒープ設定は削除 (ImGuiの描画前にはdxCommonヒープが必要なため)
 
 			// ImGuiのフレーム開始
 			ImGui_ImplWin32_NewFrame();
 			ImGui_ImplDX12_NewFrame();
 			ImGui::NewFrame();
 
-			ImGui::Begin("Controls");
+			// ... (ImGuiコントロールの処理) ...
 
-			// --- [🚨 修正点 2: Camera::Transform へのアクセスを GetTransform() 経由にする 🚨] ---
-			// 構造体への直接アクセスを避けるため、GetTransform() を使用する
-			Camera::Transform& camTransform = camera->GetTransform();
-			ImGui::DragFloat3("Camera Translate", &camTransform.translate.x, 0.1f, -10.0f, 10.0f, "%.2f");
-			ImGui::DragFloat3("Camera Rotate (rad)", &camTransform.rotate.x, 0.01f, -6.28f, 6.28f, "%.2f");
-			// --------------------------------------------------
-
-
-			Vector3& rot = object3d->transform.rotate;
-
-			// ImGui::DragFloat3 で回転角度を操作可能にする (rad)
-			// rot.x: 参照先（Vector3のx）
-			// 0.01f: 変化量（ドラッグ速度）
-			ImGui::DragFloat3("Object Rotate (rad)", &rot.x, 0.01f, -6.28f, 6.28f, "%.2f");
-			// --------------------------------------------------
-
-			// --- [🚨 修正箇所 2: Sprite の位置操作 🚨] ---
-			// 1. 単体のspriteの位置 (position_) を参照
-			Vector2& pos = sprite->position_;
-			std::string label = "Sprite Position";
-
-			// 2. ImGui::DragFloat2 で位置を操作可能にする (NDC座標系)
-			ImGui::DragFloat2(label.c_str(), &pos.x, 0.01f, -1.0f, 1.0f, "%.2f");
-			ImGui::End(); // 👈 ImGuiブロックの終了
+			// ImGui::Begin("Controls"); ... ImGui::End();
 
 			// ImGui描画
 			ImGui::Render();
+
+			// --- 【修正 1】ImGuiが使うヒープを設定 ---
+			// ImGuiのフォントテクスチャはDirectXCommonのメインSRVヒープ(srvDescriptorHeap)に確保されている
+			{
+				ID3D12DescriptorHeap* descriptorHeaps[] = { dxCommon->GetSRVDescriptorHeap().Get() };
+				dxCommon->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
+			}
+
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
 
 			// --- [🚨 ImGui後の設定リセット 🚨] ---
-			dxCommon->InitializeViewportAndScissorRect(); // ビューポートとシザー矩形の設定値を更新
+			dxCommon->InitializeViewportAndScissorRect();
 			dxCommon->InitializeScissorRect();
-			
-			// コマンドリストにビューポートとシザー矩形を再設定
 			// ----------------------------------------------------
 
 			// 3Dオブジェクトの描画準備 (RootSignature/PipelineStateを設定)
 			object3dCommon->SetCommand();
+
+			// 【修正 2】SrvManagerヒープに切り替える
+			srvManager->PreDraw(); // ★SrvManagerのヒープに切り替える
 
 			// 3Dオブジェクト個々の描画
 			object3d->Update();
@@ -196,14 +190,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 2D（Sprite）の描画準備 (3D描画後に行う)
 			spriteCommon->CommandListCreate();
 
+			// 【修正 3】Spriteの描画前にもヒープ設定を維持 (ただし、既にSrvManagerヒープなので必須ではないが安全のため残す)
+			// srvManager->PreDraw(); // 既に上で行っているので、この行は削除またはコメントアウトしても良い
+
 			// 例: スペースキーでテクスチャ切り替え
 			if (input->TriggerKey(DIK_SPACE)) {
 				sprite->ChangeTexture("resources/monsterBall.png");
 			}
 
-
 			// 1枚目のspriteも同様に
-			dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(sprite->textureIndex));
+			dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPUByFilePath(sprite->filePath_));
 			sprite->Update();
 			sprite->Draw();
 
@@ -211,7 +207,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			dxCommon->PostDraw();
 		}
 	}
-
 
 	//Windows終了
 	winApp_->Finalize();
@@ -226,6 +221,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete object3d;
 	delete camera;
 	delete object3d_2;
+	delete srvManager;
 
 	return 0;
 }

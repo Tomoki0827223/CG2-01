@@ -334,7 +334,6 @@ void DirectXCommon::InitializeImGui()
 	ImGui::StyleColorsDark(); // 再度ダークスタイルを適用
 }
 
-// 描画前処理
 void DirectXCommon::PreDraw()
 {
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -360,11 +359,9 @@ void DirectXCommon::PreDraw()
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 
-	//commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
-
-	// 描画用のデスクリプタヒープの設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
-	commandList->SetDescriptorHeaps(1, descriptorHeaps);
+	// 描画用のデスクリプタヒープの設定 (★この行を削除し、SrvManagerに委譲)
+	// ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
+	// commandList->SetDescriptorHeaps(1, descriptorHeaps); 
 
 	// ビューポートとシザー矩形の設定
 	commandList->RSSetViewports(1, &viewport);
@@ -374,7 +371,6 @@ void DirectXCommon::PreDraw()
 	//commandList->SetGraphicsRootSignature(rootSignature.Get());
 	//commandList->SetPipelineState(graphicsPipelineState.Get());
 }
-
 
 void DirectXCommon::PostDraw()
 {

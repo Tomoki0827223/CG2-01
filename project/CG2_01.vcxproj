@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CG2_01\application\engine\3d\Model.cpp" />
     <ClCompile Include="CG2_01\application\engine\io\affine.cpp" />
     <ClCompile Include="CG2_01\application\engine\base\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="CG2_01\application\engine\base\DirectXCommon.cpp" />
@@ -25,7 +26,6 @@
     <ClCompile Include="CG2_01\application\engine\base\Input.cpp" />
     <ClCompile Include="CG2_01\application\engine\base\Logger.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="CG2_01\application\engine\2d\Model.cpp" />
     <ClCompile Include="CG2_01\application\engine\3d\ModelCommon.cpp" />
     <ClCompile Include="CG2_01\application\engine\3d\ModelManager.cpp" />
     <ClCompile Include="CG2_01\application\engine\3d\Object3d.cpp" />
@@ -35,6 +35,7 @@
     <ClCompile Include="CG2_01\application\engine\base\StringUitilty.cpp" />
     <ClCompile Include="CG2_01\application\engine\2d\TextureManager.cpp" />
     <ClCompile Include="CG2_01\application\engine\base\WinApp.cpp" />
+    <ClCompile Include="SrvManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -67,6 +68,7 @@
     <ClInclude Include="CG2_01\application\engine\io\Vector2.h" />
     <ClInclude Include="CG2_01\application\engine\io\Matrix3x3.h" />
     <ClInclude Include="CG2_01\application\engine\base\WinApp.h" />
+    <ClInclude Include="SrvManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
