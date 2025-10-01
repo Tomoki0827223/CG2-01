@@ -10,6 +10,7 @@
 class ModelManager
 {
 public:
+ 
     // シングルトンインスタンスの取得
     static ModelManager* GetInstance();
     // 初期化 (DirectXCommonを引数に取る)
