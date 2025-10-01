@@ -54,6 +54,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ModelManager::GetInstance()->LoadModel("axis.obj"); // 読み込む
 	ModelManager::GetInstance()->LoadModel("multiMesh.obj"); // 読み込む
 
+
 	// 2. Object3dCommonの生成と初期化
 	Object3dCommon* object3dCommon = nullptr;
 	object3dCommon = new Object3dCommon();
