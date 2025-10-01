@@ -75,6 +75,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3d_2->SetTranslate({ 3.0f, 0.0f, 0.0f });
 	// ------------------------------------
 
+
 	// 4. SpriteCommonの生成と初期化
 	SpriteCommon* spriteCommon = nullptr;
 	spriteCommon = new SpriteCommon();
