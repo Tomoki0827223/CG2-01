@@ -80,7 +80,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3d = new Object3d();
 	// Initialize内で Object3dCommon->GetDefaultCamera() が呼ばれ、cameraがセットされる
 	object3d->Initialize(object3dCommon);
-	object3d->SetModel("multiMesh.obj"); // モデルを設定
+	object3d->SetModel("plane.obj"); // モデルを設定
 	object3d->SetTranslate({ -3.0f, 0.0f, 0.0f });
 
 	// --- 2つ目のオブジェクト（使用例） ---
@@ -172,6 +172,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			dxCommon->InitializeViewportAndScissorRect();
 			dxCommon->InitializeScissorRect();
 			// ----------------------------------------------------
+
 
 			// 3Dオブジェクトの描画準備 (RootSignature/PipelineStateを設定)
 			object3dCommon->SetCommand();
