@@ -14,6 +14,9 @@
 #include "Model.h"
 #include "ModelManager.h"
 #include "D3DResourceLeakChecker.h"
+#include "ParticleManager.h"
+#include "ParticleEmitter.h"
+
 #include "Input.h"
 #include "Vector2.h"
 #include "Vector3.h"
@@ -80,7 +83,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3d = new Object3d();
 	// Initialize内で Object3dCommon->GetDefaultCamera() が呼ばれ、cameraがセットされる
 	object3d->Initialize(object3dCommon);
-	object3d->SetModel("multiMesh.obj"); // モデルを設定
+	object3d->SetModel("plane.obj"); // モデルを設定
 	object3d->SetTranslate({ -3.0f, 0.0f, 0.0f });
 
 	// --- 2つ目のオブジェクト（使用例） ---
@@ -104,6 +107,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// Spriteの生成
 	Sprite* sprite = new Sprite();
 	sprite->Initialize(spriteCommon, "resources/uvChecker.png");
+
+	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager); // ParticleManager初期化
+
+	// 複数のテクスチャを使い分けられるようにグループを生成
+	ParticleManager::GetInstance()->CreateParticleGroup("fire", "resources/uvChecker.png"); // 架空のテクスチャ名
+	ParticleManager::GetInstance()->CreateParticleGroup("smoke", "resources/monsterBall.png"); // 架空のテクスチャ名
+	// ----------------------------------------------------
+	// --- 【追加】ParticleEmitterの生成 ---
+	// fireグループのパーティクルを生成するエミッタを座標(0, 5, 0)に、1秒間に10回、1回あたり5個発生させる
+	ParticleEmitter* fireEmitter = new ParticleEmitter("fire", { 0.0f, 5.0f, 0.0f }, 10.0f, 5);
+	// ------------------------------------
+
 
 	//ウインドウを表示する
 	ShowWindow(winApp_->GetHwnd(), SW_SHOW);
@@ -139,6 +154,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{
 			// GE3
 			input->Update();
+
+			// --- 【追加】エミッタとマネージャの更新処理 ---
+			float deltaTime = 1.0f / 60.0f; // 簡易的なデルタタイム
+			fireEmitter->Update(deltaTime); // エミッタの更新 (ここでEmitが呼ばれる)
+			ParticleManager::GetInstance()->Update(camera, deltaTime); // パーティクルの位置・寿命を更新
+			// -------------------------------------------
 
 			camera->Update();
 
@@ -187,6 +208,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			object3d_2->Update();
 			object3d_2->Draw();
 
+			// --- 【追加】パーティクル描画 ---
+			ParticleManager::GetInstance()->Draw(); // パーティクルの描画 (インスタンシング)
+			// ---------------------------------
+
 			// 2D（Sprite）の描画準備 (3D描画後に行う)
 			spriteCommon->CommandListCreate();
 
@@ -214,6 +239,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ModelManager::GetInstance()->Finalize();
 
 	delete input;
+	delete fireEmitter;
 	delete winApp_;
 	delete dxCommon;
 	delete spriteCommon;
