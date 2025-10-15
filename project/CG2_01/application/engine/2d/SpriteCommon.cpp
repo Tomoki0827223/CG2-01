@@ -105,6 +105,7 @@ void SpriteCommon::PipelineStateCreate()
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 
+
 	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlobComPtr = dxCommon_->compileShader(L"resources/shaders/Object3D.VS.hlsl", L"vs_6_0");
 	IDxcBlob* vertexShaderBlob = vertexShaderBlobComPtr.Get();
 	assert(vertexShaderBlob != nullptr);
