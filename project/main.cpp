@@ -8,6 +8,7 @@
 #include "Sprite.h"
 #include "TextureManager.h"
 #include "SrvManager.h"
+#include "ParticleManager.h"
 #include "Object3dCommon.h"
 #include "Object3d.h"
 #include "ModelCommon.h"
@@ -75,6 +76,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// object3dCommonにデフォルトカメラとしてセット
 	object3dCommon->SetDefaultCamera(camera);
 	// ----------------------------------------------------------------------
+	// ↓ 【追加 2】ParticleManagerの生成と初期化
+	ParticleManager* particleManager = new ParticleManager();
+	particleManager->Initialize(dxCommon, camera);
+
 
 	Object3d* object3d = nullptr;
 	object3d = new Object3d();
@@ -142,6 +147,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			camera->Update();
 
+			// ↓ 【追加 3】パーティクル放出のテストとUpdate
+			if (input->TriggerKey(DIK_SPACE)) {
+				// 例: 爆発のようなパーティクルを放出
+				for (int i = 0; i < 20; ++i) {
+					float speed = 0.5f + (float)(rand() % 100) / 200.0f;
+					float angle = (float)i * (360.0f / 20.0f);
+					float rad = angle * (3.14159f / 180.0f);
+
+					particleManager->Emit(
+						{ 0.0f, 0.0f, 0.0f }, // 位置
+						{ sin(rad) * speed, cos(rad) * speed, 0.0f }, // 速度 (X-Y平面に広がるように)
+						{ 1.0f, 0.5f, 0.0f, 1.0f }, // 色 (オレンジ)
+						0.2f, 0.0f, // スケール (開始0.2 -> 終了0.0)
+						1.5f // 生存時間1.5秒
+					);
+				}
+			}
+			particleManager->Update(1.0f / 60.0f); // 1/60秒で更新
+
 			// ゲーム処理
 			// 描画前処理
 			dxCommon->PreDraw(); // RTV/DSVの設定のみ
@@ -187,6 +211,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			object3d_2->Update();
 			object3d_2->Draw();
 
+			particleManager->Draw(dxCommon->GetCommandList());
+
 			// 2D（Sprite）の描画準備 (3D描画後に行う)
 			spriteCommon->CommandListCreate();
 
@@ -222,6 +248,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete camera;
 	delete object3d_2;
 	delete srvManager;
+	delete particleManager;
 
 	return 0;
 }
