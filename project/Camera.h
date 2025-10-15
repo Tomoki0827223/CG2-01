@@ -18,7 +18,7 @@ private:
     Matrix4x4 viewProjectionMatrix;
 
 public:
-    
+
     // View行列関連データ (スライド「ビュー行列関連データ」)
     struct Transform {
         Vector3 scale = { 1.0f, 1.0f, 1.0f };
@@ -58,4 +58,8 @@ public:
     Transform& GetTransform() { return transform; }
     const Transform& GetTransform() const { return transform; } // const版も追加
     // -----------------------------------------------------------------------------------
+
+    // ↓ 追加: パーティクルビルボード用のカメラベクトル取得関数
+    Vector3 GetWorldRightVector() const;
+    Vector3 GetWorldUpVector() const;
 };

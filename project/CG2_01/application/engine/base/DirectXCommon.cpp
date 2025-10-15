@@ -1,6 +1,8 @@
 #include "DirectXCommon.h"
 #include <cassert>
 #include <format>
+#include <wrl.h>
+#include <dxcapi.h> // CompileShader に必要
 #include "Logger.h"
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -499,60 +501,6 @@ D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t in
 	return GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
 }
 
-Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::compileShader(const std::wstring& filePath, const wchar_t* profile)
-{
-
-	//1.HLSLファイルを読み込む
-	Logger::Log(StringUitilty::ConvertString(std::format(L"Begin CompileShader, path:{},profile:{}\n", filePath, profile)));
-
-	IDxcBlobEncoding* shaderSource = nullptr;
-	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
-
-	assert(SUCCEEDED(hr));
-
-	DxcBuffer shaderSourceBeffer;
-
-	shaderSourceBeffer.Ptr = shaderSource->GetBufferPointer();
-	shaderSourceBeffer.Size = shaderSource->GetBufferSize();
-	shaderSourceBeffer.Encoding = DXC_CP_UTF8;
-
-	//2.コンパイルする
-	LPCWSTR arguments[] = {
-
-		filePath.c_str(),
-		L"-E",L"main",
-		L"-T",profile,
-		L"-Zi",L"-Qembed_debug",
-		L"-Od",
-		L"-Zpr",
-	};
-
-	IDxcResult* shaderResult = nullptr;
-	hr = dxcCompiler->Compile(&shaderSourceBeffer, arguments, _countof(arguments), includeHandler, IID_PPV_ARGS(&shaderResult));
-
-	assert(SUCCEEDED(hr));
-
-	//3.警告・エラーが出てないか確認する
-	IDxcBlobUtf8* shaderError = nullptr;
-
-	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
-	if (shaderError != nullptr && shaderError->GetStringLength() != 0)
-	{
-		Logger::Log(shaderError->GetStringPointer());
-
-		assert(false);
-	}
-
-	//4.コンパイル結果を受け取って返す
-	IDxcBlob* shaderBlob = nullptr;
-	hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
-	assert(SUCCEEDED(hr));
-
-	Logger::Log(StringUitilty::ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
-
-	return shaderBlob;
-}
-
 Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_t sizeInBytes)
 {
 	//リソースの関数化
@@ -648,6 +596,62 @@ void DirectXCommon::WaitForGPU()
 		assert(SUCCEEDED(hr));
 		WaitForSingleObject(fenceEvent, INFINITE);
 	}
+}
+
+// DXCでHLSLシェーダーをコンパイルする関数
+Microsoft::WRL::ComPtr<ID3DBlob> DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile) {
+	// DXCのインスタンス生成
+	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
+	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
+	HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	assert(SUCCEEDED(hr));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	assert(SUCCEEDED(hr));
+
+	// シェーダーファイルを読み込む
+	Microsoft::WRL::ComPtr<IDxcBlobEncoding> shaderSource;
+	hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
+	assert(SUCCEEDED(hr));
+
+	// コンパイルに必要なパラメータ
+	LPCWSTR arguments[] = {
+		filePath.c_str(), // ソースファイル名
+		L"-E", L"main",   // エントリポイント
+		L"-T", profile,   // シェーダーモデル (例: "vs_6_0")
+		L"-Zi", L"-Qembed_debug", // デバッグ情報
+		L"-O0", // 最適化レベルを0
+		L"-I", L"resources/shaders/", // インクルードパス (Particle.hlslなどがある場所)
+		L"-I", L"CG2_01/application/engine/io/", // インクルードパス
+		L"-warnings-as-errors", // 警告をエラーとして扱う
+		L"-HV", L"2018", // HLSL 2018
+	};
+
+	DxcBuffer shaderBuffer;
+	shaderBuffer.Ptr = shaderSource->GetBufferPointer();
+	shaderBuffer.Size = shaderSource->GetBufferSize();
+	shaderBuffer.Encoding = DXC_CP_UTF8;
+
+	Microsoft::WRL::ComPtr<IDxcResult> result;
+	hr = dxcCompiler->Compile(
+		&shaderBuffer,
+		arguments,
+		_countof(arguments),
+		nullptr,
+		IID_PPV_ARGS(&result));
+	assert(SUCCEEDED(hr));
+
+	// エラーチェック
+	Microsoft::WRL::ComPtr<IDxcBlobUtf8> errors;
+	result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr);
+	if (errors && errors->GetStringLength() > 0) {
+		OutputDebugStringA((char*)errors->GetBufferPointer());
+		assert(false);
+	}
+
+	// 成功した結果を取得
+	Microsoft::WRL::ComPtr<ID3DBlob> shaderBlob;
+	result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+	return shaderBlob;
 }
 
 Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height)

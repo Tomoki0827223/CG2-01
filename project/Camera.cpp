@@ -30,3 +30,15 @@ void Camera::Update() {
     // viewProjectionMatrix = Multiply(ビュー行列, プロジェクション行列);
     viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 }
+
+// カメラの右ベクトルを取得 (ワールド空間)
+Vector3 Camera::GetWorldRightVector() const {
+    // View行列の回転成分（転置）の列ベクトルを取得
+    return { viewMatrix.m[0][0], viewMatrix.m[1][0], viewMatrix.m[2][0] };
+}
+
+// カメラの上ベクトルを取得 (ワールド空間)
+Vector3 Camera::GetWorldUpVector() const {
+    // View行列の回転成分（転置）の列ベクトルを取得
+    return { viewMatrix.m[0][1], viewMatrix.m[1][1], viewMatrix.m[2][1] };
+}

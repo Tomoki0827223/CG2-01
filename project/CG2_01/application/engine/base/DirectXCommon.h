@@ -121,6 +121,10 @@ public:
     /// </summary>
     void WaitForGPU(); // 追加
 
+    // ↓ 追加
+    Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
+    // ↑
+
 private:
 
     //記録時間(FPS固定用)

@@ -1,11 +1,12 @@
 #include "ParticleManager.h"
-// ParticleManager.h から移動したインクルード
+// ↓ .hから移動したインクルードと、追加で必要なインクルード
 #include "TextureManager.h"
 #include "SrvManager.h"
 #include "Camera.h"
 #include <cassert>
 #include <algorithm>
-#include <string> // CompileShaderで使用される可能性のため追加
+#include <string> 
+#include <dxcapi.h> // CompileShaderの実装に必要
 
 #pragma region ヘルパー関数
 
@@ -101,10 +102,7 @@ void ParticleManager::CreateResources() {
     std::fill(instancingMap, instancingMap + kMaxParticles, ParticleData{});
 
     // --- 3. 定数バッファの作成 (ConstBufferData: Camera情報用) ---
-    // 💡 修正: constantBuffer のスペルミス (ComPtr) はヘッダーで修正済み。ここでは正常に動作する。
     constantBuffer = CreateBufferResource(device, sizeof(ConstBufferData));
-
-    // 定数バッファはDrawでGPUへ転送するため、マップしたままにする必要はありません。
 }
 
 void ParticleManager::CreatePipeline() {
@@ -161,123 +159,34 @@ void ParticleManager::CreatePipeline() {
     hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
     assert(SUCCEEDED(hr));
 
-    // シェーダーのコンパイルと読み込み
-    Microsoft::WRL::ComPtr<ID3DBlob> vertexShaderBlob;
-    Microsoft::WRL::ComPtr<ID3DBlob> pixelShaderBlob;
-    // 💡 修正: DirectXCommonに CompileShader がないというエラーに対応するため、
-    // ユーザーに DirectXCommon.h の修正を促します。ここでは呼び出しは維持。
-    vertexShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Particle.VS.hlsl", L"vs_6_0");
-    pixelShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Particle.PS.hlsl", L"ps_6_0");
-    assert(vertexShaderBlob && pixelShaderBlob);
 
     // --- 2. PipelineStateObjectの作成 ---
 
     // InputLayout (頂点データとインスタンスデータ)
-    D3D12_INPUT_ELEMENT_DESC inputElementDescs[_countof(ParticleData) + 2]{};
-
-    // Vertex Data (4頂点のクアッド用)
-    inputElementDescs[0].SemanticName = "POSITION";
-    inputElementDescs[0].SemanticIndex = 0;
-    inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-    inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-    inputElementDescs[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-
-    inputElementDescs[1].SemanticName = "TEXCOORD";
-    inputElementDescs[1].SemanticIndex = 0;
-    inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-    inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-    inputElementDescs[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-
-    // Instance Data (ParticleData)
-    // ParticleManager.hのstruct ParticleDataのメンバ順に合わせる
-    int instanceElementIndex = 2;
-    // position
-    inputElementDescs[instanceElementIndex].SemanticName = "INSTANCE_POSITION";
-    inputElementDescs[instanceElementIndex].SemanticIndex = 0;
-    inputElementDescs[instanceElementIndex].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-    inputElementDescs[instanceElementIndex].InputSlot = 1; // インスタンスデータはスロット1
-    inputElementDescs[instanceElementIndex].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
-    inputElementDescs[instanceElementIndex].InstanceDataStepRate = 1;
-    instanceElementIndex++;
-
-    // velocity (VSでは使用しないが、構造体合わせとセマンティクスが必要)
-    inputElementDescs[instanceElementIndex].SemanticName = "INSTANCE_VELOCITY";
-    inputElementDescs[instanceElementIndex].SemanticIndex = 0;
-    inputElementDescs[instanceElementIndex].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-    inputElementDescs[instanceElementIndex].InputSlot = 1;
-    inputElementDescs[instanceElementIndex].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-    inputElementDescs[instanceElementIndex].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
-    inputElementDescs[instanceElementIndex].InstanceDataStepRate = 1;
-    instanceElementIndex++;
-
-    // color
-    inputElementDescs[instanceElementIndex].SemanticName = "INSTANCE_COLOR";
-    inputElementDescs[instanceElementIndex].SemanticIndex = 0;
-    inputElementDescs[instanceElementIndex].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    inputElementDescs[instanceElementIndex].InputSlot = 1;
-    inputElementDescs[instanceElementIndex].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-    inputElementDescs[instanceElementIndex].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
-    inputElementDescs[instanceElementIndex].InstanceDataStepRate = 1;
-    instanceElementIndex++;
-
-    // startScale
-    inputElementDescs[instanceElementIndex].SemanticName = "INSTANCE_START_SCALE";
-    inputElementDescs[instanceElementIndex].SemanticIndex = 0;
-    inputElementDescs[instanceElementIndex].Format = DXGI_FORMAT_R32_FLOAT;
-    inputElementDescs[instanceElementIndex].InputSlot = 1;
-    inputElementDescs[instanceElementIndex].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-    inputElementDescs[instanceElementIndex].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
-    inputElementDescs[instanceElementIndex].InstanceDataStepRate = 1;
-    instanceElementIndex++;
-
-    // endScale
-    inputElementDescs[instanceElementIndex].SemanticName = "INSTANCE_END_SCALE";
-    inputElementDescs[instanceElementIndex].SemanticIndex = 0;
-    inputElementDescs[instanceElementIndex].Format = DXGI_FORMAT_R32_FLOAT;
-    inputElementDescs[instanceElementIndex].InputSlot = 1;
-    inputElementDescs[instanceElementIndex].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-    inputElementDescs[instanceElementIndex].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
-    inputElementDescs[instanceElementIndex].InstanceDataStepRate = 1;
-    instanceElementIndex++;
-
-    // lifetime
-    inputElementDescs[instanceElementIndex].SemanticName = "INSTANCE_LIFETIME";
-    inputElementDescs[instanceElementIndex].SemanticIndex = 0;
-    inputElementDescs[instanceElementIndex].Format = DXGI_FORMAT_R32_FLOAT;
-    inputElementDescs[instanceElementIndex].InputSlot = 1;
-    inputElementDescs[instanceElementIndex].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-    inputElementDescs[instanceElementIndex].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
-    inputElementDescs[instanceElementIndex].InstanceDataStepRate = 1;
-    instanceElementIndex++;
-
-    // currentTime
-    inputElementDescs[instanceElementIndex].SemanticName = "INSTANCE_CURRENT_TIME";
-    inputElementDescs[instanceElementIndex].SemanticIndex = 0;
-    inputElementDescs[instanceElementIndex].Format = DXGI_FORMAT_R32_FLOAT;
-    inputElementDescs[instanceElementIndex].InputSlot = 1;
-    inputElementDescs[instanceElementIndex].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-    inputElementDescs[instanceElementIndex].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
-    inputElementDescs[instanceElementIndex].InstanceDataStepRate = 1;
-    instanceElementIndex++;
-
-    // isActive
-    inputElementDescs[instanceElementIndex].SemanticName = "INSTANCE_IS_ACTIVE";
-    inputElementDescs[instanceElementIndex].SemanticIndex = 0;
-    inputElementDescs[instanceElementIndex].Format = DXGI_FORMAT_R32_SINT; // intはSINT
-    inputElementDescs[instanceElementIndex].InputSlot = 1;
-    inputElementDescs[instanceElementIndex].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-    inputElementDescs[instanceElementIndex].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
-    inputElementDescs[instanceElementIndex].InstanceDataStepRate = 1;
-    // instanceElementIndex++; // ここで終わり
+    D3D12_INPUT_ELEMENT_DESC inputElementDescs[] = {
+        // Vertex Data (スロット0)
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        // Instance Data (スロット1)
+        {"INSTANCE_POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1},
+        {"INSTANCE_VELOCITY", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1},
+        {"INSTANCE_COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1},
+        {"INSTANCE_START_SCALE", 0, DXGI_FORMAT_R32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1},
+        {"INSTANCE_END_SCALE", 0, DXGI_FORMAT_R32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1},
+        {"INSTANCE_LIFETIME", 0, DXGI_FORMAT_R32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1},
+        {"INSTANCE_CURRENT_TIME", 0, DXGI_FORMAT_R32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1},
+        {"INSTANCE_IS_ACTIVE", 0, DXGI_FORMAT_R32_SINT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1},
+    };
 
     D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
     inputLayoutDesc.pInputElementDescs = inputElementDescs;
-    inputLayoutDesc.NumElements = _countof(ParticleData) + 2;
+    inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
 
     // シェーダーのコンパイルと読み込み
     Microsoft::WRL::ComPtr<ID3DBlob> vertexShaderBlob;
     Microsoft::WRL::ComPtr<ID3DBlob> pixelShaderBlob;
+    // 💡 修正: DirectXCommon::CompileShader が呼び出される (Step 2で追加が必要)
     vertexShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Particle.VS.hlsl", L"vs_6_0");
     pixelShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Particle.PS.hlsl", L"ps_6_0");
     assert(vertexShaderBlob && pixelShaderBlob);
@@ -305,7 +214,7 @@ void ParticleManager::CreatePipeline() {
     // RasterizerState (通常通り)
     D3D12_RASTERIZER_DESC rasterizerDesc{};
     rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
-    rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK; // ビルボードはカリングされないはずだが、一応設定
+    rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
     rasterizerDesc.DepthClipEnable = TRUE;
 
     // DepthStencilState (デプス参照は行うが、書き込みはしない)
@@ -335,12 +244,15 @@ void ParticleManager::CreatePipeline() {
     assert(SUCCEEDED(hr));
 }
 
+
 void ParticleManager::LoadTexture() {
-    // 既存のTextureManagerとSrvManagerを使ってテクスチャをロード
-    // 例として「resources/uvChecker.png」または専用のパーティクルテクスチャを使用
-    textureHandle = TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
-    // または、専用のパーティクルテクスチャ (例: "resources/spark.png") を用意してロード
+    // 💡 修正: LoadTextureはvoidを返すため、Loadを呼ぶ
+    TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
+
+    // 💡 修正: ハンドルはファイルパスから取得し、indexを保持する (テクスチャ番号取得)
+    textureHandle = TextureManager::GetInstance()->GetSrvIndexByFilePath("resources/uvChecker.png");
 }
+
 
 void ParticleManager::Emit(const Vector3& position, const Vector3& velocity,
     const Vector4& color, float startScale, float endScale, float lifetime) {
@@ -363,25 +275,20 @@ void ParticleManager::Emit(const Vector3& position, const Vector3& velocity,
 void ParticleManager::Update(float deltaTime) {
     for (int i = 0; i < kMaxParticles; ++i) {
         if (particles[i].isActive) {
-            // 経過時間を更新
             particles[i].currentTime += deltaTime;
 
-            // 💡 修正: Vector3 * float の演算子オーバーロードがないため、メンバごとに計算する
-            // particles[i].position = particles[i].position + particles[i].velocity * deltaTime;
+            // 💡 修正: Vector3 * float の演算子がないため、メンバごとに計算
             particles[i].position.x += particles[i].velocity.x * deltaTime;
             particles[i].position.y += particles[i].velocity.y * deltaTime;
             particles[i].position.z += particles[i].velocity.z * deltaTime;
 
-            // 寿命チェック
             if (particles[i].currentTime >= particles[i].lifetime) {
-                particles[i].isActive = 0; // 終了
+                particles[i].isActive = 0;
             }
 
-            // GPUに転送するためのバッファにデータをコピー
             instancingMap[i] = particles[i];
         }
         else {
-            // 非アクティブなパーティクルも、GPUへの転送バッファを更新
             instancingMap[i] = particles[i];
         }
     }
@@ -395,7 +302,7 @@ void ParticleManager::Draw(ID3D12GraphicsCommandList* commandList) {
     // プリミティブ形状の設定
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP); // 4頂点で描画するためTRISTRIP
 
-    // VB/IBの設定 
+    // VB/IBの設定
     commandList->IASetVertexBuffers(0, 1, &vbView);
     // インスタンスデータバッファの設定 (スロット1)
     D3D12_VERTEX_BUFFER_VIEW instancingVBView{};
@@ -408,15 +315,12 @@ void ParticleManager::Draw(ID3D12GraphicsCommandList* commandList) {
     // --- 定数バッファの更新と設定 ---
     ConstBufferData cData{};
     cData.viewProjection = camera_->GetViewProjectionMatrix();
-
-    // 💡 修正: Camera::GetWorld*Vector がないというエラーに対応するため、
-    // ユーザーに Camera.h の修正を促します。ここでは呼び出しは維持。
+    // 💡 修正: Camera.cppで実装した関数を呼び出す
     cData.cameraRight = camera_->GetWorldRightVector();
     cData.cameraUp = camera_->GetWorldUpVector();
 
     // 定数バッファに書き込み
     void* mapData = nullptr;
-    // 💡 修正: constantBuffer のスペルミス (ComPtr) はヘッダーで修正済み。ここでは正常に動作する。
     constantBuffer->Map(0, nullptr, &mapData);
     memcpy(mapData, &cData, sizeof(ConstBufferData));
     constantBuffer->Unmap(0, nullptr);
@@ -425,7 +329,8 @@ void ParticleManager::Draw(ID3D12GraphicsCommandList* commandList) {
     commandList->SetGraphicsRootConstantBufferView(0, constantBuffer->GetGPUVirtualAddress());
 
     // SRVの設定 (ルートパラメータ1)
-    D3D12_GPU_DESCRIPTOR_HANDLE textureHandleGPU = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle);
+    // 💡 修正: GetSrvHandleGPUByFilePathを使用
+    D3D12_GPU_DESCRIPTOR_HANDLE textureHandleGPU = TextureManager::GetInstance()->GetSrvHandleGPUByFilePath("resources/uvChecker.png");
     commandList->SetGraphicsRootDescriptorTable(1, textureHandleGPU);
 
 
@@ -436,9 +341,5 @@ void ParticleManager::Draw(ID3D12GraphicsCommandList* commandList) {
             activeCount++;
         }
     }
-
-    // DrawInstanced(頂点数, インスタンス数, 頂点オフセット, インスタンスオフセット)
     commandList->DrawInstanced(4, activeCount, 0, 0);
-
-    // 備考: 4頂点で1枚のビルボードを描画するため、プリミティブトポロジはD3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIPが適切
 }
