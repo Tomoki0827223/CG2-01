@@ -98,14 +98,24 @@ void ParticleManager::Update(Camera* camera, float deltaTime) {
         group.instancingDatas.clear();
         group.instanceCount = 0;
 
+        // イテレータ for ループでリスト内のパーティクルを処理
         for (auto it = group.particles.begin(); it != group.particles.end();) {
             Particle& p = *it;
 
-            // ... (寿命チェック、速度・位置の更新は変更なし。Vector3の演算子オーバーロードが仮定されているためOK)
-            // p.velocity = p.velocity + p.acceleration * deltaTime; 
-            // p.position = p.position + p.velocity * deltaTime;
+            // 🚀 【修正 1: パーティクルの速度・位置の更新処理を有効化】
+            // 速度 = 速度 + 加速度 * デルタタイム
+            p.velocity = p.velocity + p.acceleration * deltaTime;
+            // 位置 = 位置 + 速度 * デルタタイム
+            p.position = p.position + p.velocity * deltaTime;
 
             p.currentTime += deltaTime;
+
+            // 💀 【修正 2: 寿命による削除処理を追加】
+            if (p.currentTime >= p.lifeTime) {
+                // 寿命が尽きたらリストから削除し、次の要素へイテレータを進める
+                it = group.particles.erase(it);
+                continue; // 削除したので、以降の処理はスキップして次の要素へ
+            }
 
             // ワールド行列を計算
             // 既にMatrix4x4の静的関数とoperator*が仮定されているためOK
@@ -119,7 +129,7 @@ void ParticleManager::Update(Camera* camera, float deltaTime) {
             group.instancingDatas.push_back(instanceData);
             group.instanceCount++;
 
-            ++it;
+            ++it; // 削除しなかった場合のみイテレータを進める
         }
 
         // InstancingDataをリソースに書き込む (概念的な実装)
