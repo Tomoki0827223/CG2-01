@@ -224,7 +224,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			}
 
 			// 1枚目のspriteも同様に
-			dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPUByFilePath(sprite->filePath_));
+			// ❌ error C2660: 'ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable': 関数に 1 個の引数を指定できません。
+			// 👇 修正: Root Parameter Index (2) と GPU Handle を渡す
+			dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(
+				2, // Root Parameter Index (SpriteCommonの定義に基づく)
+				TextureManager::GetInstance()->GetSrvHandleGPUByFilePath(sprite->filePath_) // GPUハンドル
+			); // ★修正
 			sprite->Update();
 			sprite->Draw();
 
