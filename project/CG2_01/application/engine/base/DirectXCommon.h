@@ -91,7 +91,11 @@ public:
     uint32_t GetDescriptorSizeRTV() const { return descriptorSizeRTV; }
     uint32_t GetDescriptorSizeSRV() const { return descriptorSizeSRV; }
 
-    Microsoft::WRL::ComPtr<IDxcBlob> compileShader(const std::wstring& filePath, const wchar_t* profile);
+    // ↓ 修正: IDxcBlob -> ID3DBlob に戻します
+    Microsoft::WRL::ComPtr<ID3DBlob> compileShader(const std::wstring& filePath, const wchar_t* profile);
+
+    // ↓ 修正: CompileShader -> compileShader (Cを小文字に)
+    Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
 
     /// <summary>
     /// バッファリソースの生成
@@ -120,10 +124,6 @@ public:
     /// GPUのコマンド実行完了を待機する
     /// </summary>
     void WaitForGPU(); // 追加
-
-    // ↓ 追加
-    Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
-    // ↑
 
 private:
 

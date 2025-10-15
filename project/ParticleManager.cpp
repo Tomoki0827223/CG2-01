@@ -182,14 +182,24 @@ void ParticleManager::CreatePipeline() {
     inputLayoutDesc.pInputElementDescs = inputElementDescs;
     inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
-
     // シェーダーのコンパイルと読み込み
+    // ↓ 修正: IDxcBlob -> ID3DBlob に変更
     Microsoft::WRL::ComPtr<ID3DBlob> vertexShaderBlob;
     Microsoft::WRL::ComPtr<ID3DBlob> pixelShaderBlob;
-    // 💡 修正: DirectXCommon::CompileShader が呼び出される (Step 2で追加が必要)
-    vertexShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Particle.VS.hlsl", L"vs_6_0");
-    pixelShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Particle.PS.hlsl", L"ps_6_0");
+
+    // compileShader が ID3DBlob を返すようになったため、代入可能になる
+    vertexShaderBlob = dxCommon_->compileShader(L"resources/shaders/Particle.VS.hlsl", L"vs_6_0");
+    pixelShaderBlob = dxCommon_->compileShader(L"resources/shaders/Particle.PS.hlsl", L"ps_6_0");
     assert(vertexShaderBlob && pixelShaderBlob);
+
+    // PipelineStateの作成
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+    psoDesc.pRootSignature = rootSignature.Get();
+
+    // ID3DBlob のメソッドを使用 (そのまま)
+    psoDesc.VS = { vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize() };
+    psoDesc.PS = { pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize() };
+
 
     // BlendState (加算合成: Additive Blending)
     D3D12_BLEND_DESC blendDesc{};

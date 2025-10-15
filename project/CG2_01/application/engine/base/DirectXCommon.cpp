@@ -598,6 +598,74 @@ void DirectXCommon::WaitForGPU()
 	}
 }
 
+// DirectXCommon.cpp (ファイル内の compileShader 関数の実装部分)
+
+// DXCでHLSLシェーダーをコンパイルする関数
+// 💡 修正: 戻り値の型を ID3DBlob に変更
+Microsoft::WRL::ComPtr<ID3DBlob> DirectXCommon::compileShader(const std::wstring& filePath, const wchar_t* profile) {
+	// DXCのインスタンス生成
+	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
+	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
+	HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	assert(SUCCEEDED(hr));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	assert(SUCCEEDED(hr));
+
+	// シェーダーファイルを読み込む
+	Microsoft::WRL::ComPtr<IDxcBlobEncoding> shaderSource;
+	hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
+	assert(SUCCEEDED(hr));
+
+	// コンパイルに必要なパラメータ (省略)
+	LPCWSTR arguments[] = {
+		filePath.c_str(), // ソースファイル名
+		L"-E", L"main",   // エントリポイント
+		L"-T", profile,   // シェーダーモデル (例: "vs_6_0")
+		L"-Zi", L"-Qembed_debug", // デバッグ情報
+		L"-O0", // 最適化レベルを0
+		L"-I", L"resources/shaders/", // インクルードパス
+		L"-I", L"CG2_01/application/engine/io/", // インクルードパス
+		L"-warnings-as-errors", // 警告をエラーとして扱う
+		L"-HV", L"2018", // HLSL 2018
+	};
+
+	DxcBuffer shaderBuffer;
+	shaderBuffer.Ptr = shaderSource->GetBufferPointer();
+	shaderBuffer.Size = shaderSource->GetBufferSize();
+	shaderBuffer.Encoding = DXC_CP_UTF8;
+
+	Microsoft::WRL::ComPtr<IDxcResult> result;
+	hr = dxcCompiler->Compile(
+		&shaderBuffer,
+		arguments,
+		_countof(arguments),
+		nullptr,
+		IID_PPV_ARGS(&result));
+	assert(SUCCEEDED(hr));
+
+	// エラーチェック (省略)
+	Microsoft::WRL::ComPtr<IDxcBlobUtf8> errors;
+	result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr);
+	if (errors && errors->GetStringLength() > 0) {
+		OutputDebugStringA((char*)errors->GetBufferPointer());
+		assert(false);
+	}
+
+	// 成功した IDxcBlob を取得
+	Microsoft::WRL::ComPtr<IDxcBlob> dxcBlob;
+	result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&dxcBlob), nullptr);
+
+	// 💡 修正: IDxcBlob の内容を ID3DBlob にコピーして返す
+	Microsoft::WRL::ComPtr<ID3DBlob> shaderBlob;
+	hr = D3DCreateBlob(dxcBlob->GetBufferSize(), &shaderBlob); // ID3D10Blob (ID3DBlob) を作成
+	assert(SUCCEEDED(hr));
+
+	// データをコピー
+	memcpy(shaderBlob->GetBufferPointer(), dxcBlob->GetBufferPointer(), dxcBlob->GetBufferSize());
+
+	return shaderBlob; // ID3DBlob を返す
+}
+
 // DXCでHLSLシェーダーをコンパイルする関数
 Microsoft::WRL::ComPtr<ID3DBlob> DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile) {
 	// DXCのインスタンス生成
