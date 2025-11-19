@@ -4,6 +4,7 @@
 
 // デフォルトコンストラクタ (スライド「デフォルトコンストラクタ」)
 Camera::Camera() :
+
     aspectRatio(float(WinApp::kClientWidth) / float(WinApp::kClientHeight))
 {
     // 行列の初期計算はコンストラクタ内で実行しない (Updateで計算する)
