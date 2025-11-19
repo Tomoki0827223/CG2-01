@@ -92,6 +92,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// ------------------------------------
 
 
+
 	// 4. SpriteCommonの生成と初期化
 	SpriteCommon* spriteCommon = nullptr;
 	spriteCommon = new SpriteCommon();
