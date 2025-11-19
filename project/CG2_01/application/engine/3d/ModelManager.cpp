@@ -72,3 +72,31 @@ Model* ModelManager::FindModel(const std::string& filePath)
     // ファイル名一致なし
     return nullptr;
 }
+
+void ModelManager::Load(const std::string& filePath)
+{
+    // 既存のLoadModel関数を呼び出す
+    LoadModel(filePath);
+}
+
+Model* ModelManager::GetModel(uint32_t modelIndex) const
+{
+    // インデックスが範囲外でないかチェック
+    if (modelIndex >= models.size()) {
+        // 範囲外ならnullptrを返す
+        return nullptr;
+    }
+
+    // イテレータを先頭に設定
+    // models が std::map<string, unique_ptr<Model>> であることを前提とします
+    auto it = models.cbegin(); // const iterator を取得
+
+    // modelIndexの回数だけイテレータを進める (手動ループを使用)
+    // ※ C++11以降なら std::advance(it, modelIndex); が使えますが、互換性のためループで記述します。
+    for (uint32_t i = 0; i < modelIndex; ++i) {
+        ++it;
+    }
+
+    // イテレータが指す要素 (it->second は unique_ptr<Model>) の生ポインタを取得
+    return it->second.get();
+}

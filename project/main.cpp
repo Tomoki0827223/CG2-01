@@ -13,6 +13,8 @@
 #include "ModelCommon.h"
 #include "Model.h"
 #include "ModelManager.h"
+#include "ParticleEmitter.h"
+#include "Particle.h"
 #include "D3DResourceLeakChecker.h"
 #include "Input.h"
 #include "Vector2.h"
@@ -30,6 +32,16 @@
 #include "externals/imgui/imgui_impl_win32.h"
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+
+
+	// ImGuiで制御するパーティクルエミッタのパラメータ
+	Vector3 emitterPosition = { 0.0f, 5.0f, 0.0f };
+	int emitCount = 5;
+	float speedMin = 2.0f;
+	float speedMax = 5.0f;
+	float lifeTimeMin = 1.0f;
+	float lifeTimeMax = 3.0f;
+
 	//D3DResourceLeakChecker LeakCheak;
 
 	WinApp* winApp_ = nullptr;
@@ -97,6 +109,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	spriteCommon = new SpriteCommon();
 	spriteCommon->Initialize(dxCommon);
 
+	// ModelManagerとDirectXCommonがシングルトンパターンなどでアクセス可能と仮定します。
+	// ModelManagerインスタンスを取得 (シングルトンと仮定)
+	ModelManager* modelManager = ModelManager::GetInstance();
+
+	// --------------------------------------------------------------------------------
+	// 【修正箇所】パーティクル用モデルのロードと取得
+	// --------------------------------------------------------------------------------
+
+	// 1. ロード前のモデル数を取得 (ModelManager.hに GetModelSize() の追加が必要です)
+	size_t preLoadSize = modelManager->GetModelSize(); // error C2039, C2065 対策
+
+	// 2. パーティクル用のモデルをロード (Loadはvoidを返す)
+	modelManager->Load("plane.obj");
+
+	// 3. ロードしたモデルをModelManagerから取得
+	uint32_t particleModelIndex = static_cast<uint32_t>(preLoadSize);
+	Model* particleModel = modelManager->GetModel(particleModelIndex); // error C2039 対策
+
+	// --------------------------------------------------------------------------------
+
+	// ParticleEmitterのインスタンス化
+	ParticleEmitter emitter;
+
+	// Object3dCommon* object3dCommon = Object3dCommon::GetInstance(); // <--- この行を削除またはコメントアウト
+	// Camera* mainCamera = camera;                                     // <--- この行を削除またはコメントアウト
+
+	// Emitterの初期化
+	// object3dCommonとcameraは既存のコードで既に宣言・初期化されている変数を使う
+	emitter.Initialize(object3dCommon, particleModel, camera); // error C2374, C2086 対策
 
 	// 1. テクスチャをロードする (Objファイルロードの前に実行)
 	TextureManager::GetInstance()->LoadTexture("resources/uvChecker.png");
@@ -146,18 +187,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 描画前処理
 			dxCommon->PreDraw(); // RTV/DSVの設定のみ
 			// srvManager->PreDraw(); // 1回目のSrvManagerヒープ設定は削除 (ImGuiの描画前にはdxCommonヒープが必要なため)
-
-			// ImGuiのフレーム開始
-			ImGui_ImplWin32_NewFrame();
+			
+			// === ImGui処理の開始 ===
 			ImGui_ImplDX12_NewFrame();
+			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
 
-			// ... (ImGuiコントロールの処理) ...
+			// ImGui ウィンドウの作成 (ここはループ内に残す)
+			ImGui::Begin("Particle Emitter Settings");
 
-			// ImGui::Begin("Controls"); ... ImGui::End();
+			// 変数へのポインタを渡すことで、ImGuiがその値を変更します
+			ImGui::DragFloat3("Position (X, Y, Z)", &emitterPosition.x, 0.1f, -10.0f, 10.0f); //
+			ImGui::SliderInt("Emit Count", &emitCount, 0, 50);
+			ImGui::DragFloatRange2("Min/Max Speed", &speedMin, &speedMax, 0.1f, 0.0f, 20.0f, "Min: %.1f", "Max: %.1f");
+			ImGui::DragFloatRange2("Min/Max Life Time", &lifeTimeMin, &lifeTimeMax, 0.1f, 0.1f, 10.0f, "Min: %.1f s", "Max: %.1f s");
 
-			// ImGui描画
+			ImGui::End();
+
+			// === ImGuiの描画データ生成 ===
 			ImGui::Render();
+			// ------------------------------------
 
 			// --- 【修正 1】ImGuiが使うヒープを設定 ---
 			// ImGuiのフォントテクスチャはDirectXCommonのメインSRVヒープ(srvDescriptorHeap)に確保されている
@@ -186,6 +235,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 2つ目のオブジェクトを描画
 			object3d_2->Update();
 			object3d_2->Draw();
+
+			// --- 更新処理 ---
+			// 毎フレーム、または特定のタイミングでパーティクルを生成
+			emitter.Emit(
+				emitterPosition,       // 永続的な変数を使用
+				emitCount,             // 永続的な変数を使用
+				speedMin, speedMax,    // 永続的な変数を使用
+				lifeTimeMin, lifeTimeMax // 永続的な変数を使用
+			);
+
+			// パーティクルシステムの更新
+			emitter.Update();
+			// パーティクルの描画
+			emitter.Draw();
 
 			// 2D（Sprite）の描画準備 (3D描画後に行う)
 			spriteCommon->CommandListCreate();

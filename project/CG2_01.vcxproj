@@ -35,6 +35,8 @@
     <ClCompile Include="CG2_01\application\engine\base\StringUitilty.cpp" />
     <ClCompile Include="CG2_01\application\engine\2d\TextureManager.cpp" />
     <ClCompile Include="CG2_01\application\engine\base\WinApp.cpp" />
+    <ClCompile Include="Particle.cpp" />
+    <ClCompile Include="ParticleEmitter.cpp" />
     <ClCompile Include="SrvManager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -68,6 +70,8 @@
     <ClInclude Include="CG2_01\application\engine\io\Vector2.h" />
     <ClInclude Include="CG2_01\application\engine\io\Matrix3x3.h" />
     <ClInclude Include="CG2_01\application\engine\base\WinApp.h" />
+    <ClInclude Include="Particle.h" />
+    <ClInclude Include="ParticleEmitter.h" />
     <ClInclude Include="SrvManager.h" />
   </ItemGroup>
   <ItemGroup>

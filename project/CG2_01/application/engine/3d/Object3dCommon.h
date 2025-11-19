@@ -26,6 +26,8 @@ public:
 	void SetDefaultCamera(Camera* camera) { this->defaultCamera = camera; }
 	Camera* GetDefaultCamera() const { return defaultCamera; }
 
+	static Object3dCommon* GetInstance();
+
 private:
 
 	// --- [依存と共通データ] ---

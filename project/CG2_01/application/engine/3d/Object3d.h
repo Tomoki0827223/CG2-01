@@ -88,6 +88,8 @@ public:
     // ファイルパスを引数に取るSetModelのオーバーロード
     void SetModel(const std::string& filePath);
 
+    void SetModel(Model* model) { this->model = model; } // privateメンバの'model'にアクセス
+
     // --- 【追加】TransformのSetter/Getter (自分で考えよう部分) ---
     void SetScale(const Vector3& scale) { transform.scale = scale; }
     void SetRotate(const Vector3& rotate) { transform.rotate = rotate; }

@@ -24,6 +24,13 @@ public:
     // 格納したモデルデータの取得
     Model* FindModel(const std::string& filePath);
 
+    
+    // ファイルパスからモデルをロードし、モデルリストに格納する
+    void Load(const std::string& filePath);
+    // ロードされたモデルをインデックスで取得する
+    Model* GetModel(uint32_t modelIndex) const;
+    size_t GetModelSize() const { return models.size(); } // modelsはprivateだが、このクラス内からはアクセス可能
+
 private:
     // プライベートコンストラクタ
     ModelManager() = default;
