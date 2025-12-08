@@ -30,3 +30,8 @@ void Camera::Update() {
     // viewProjectionMatrix = Multiply(ビュー行列, プロジェクション行列);
     viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 }
+
+Matrix4x4 Camera::GetInverseViewMatrix() const {
+    // ビュー行列を反転すると、ワールド行列（カメラのワールド座標系）になる
+    return Inverse(viewMatrix);
+}

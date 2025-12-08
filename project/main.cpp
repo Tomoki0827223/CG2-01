@@ -26,8 +26,12 @@
 #include <string>
 #include "affine.h"
 #include "Camera.h" 
+#include "Particle.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
+
+std::unique_ptr<Particle> particle = nullptr;
+std::unique_ptr<Camera> camera = nullptr;
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//D3DResourceLeakChecker LeakCheak;
@@ -66,6 +70,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Object3dCommon* object3dCommon = nullptr;
 	object3dCommon = new Object3dCommon();
 	object3dCommon->Initialize(dxCommon);
+
+	uint32_t particleTextureHandle = TextureManager::LoadTexture("resources/uvChecker.png"); // テクスチャの読み込み (例)
+
+	particle = std::make_unique<Particle>();
+	particle->Initialize(particleTextureHandle);
+
+	camera = std::make_unique<Camera>();
+	camera->Initialize(); // カメラの初期化
 
 	// --- 【追加】カメラの生成と設定 (スライド「オブジェクトにセットする」) ---
 	Camera* camera = new Camera();
@@ -144,6 +156,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			camera->Update();
 
 			// ゲーム処理
+			// 更新処理
+			camera->Update();
+			particle->Update();
+
+			// 例: パーティクルの生成
+			particle->Emit({ 0, 0, 0 }, { 0.1f, 0.1f, 0.1f }, 60, 1.0f, 0.0f, { 1, 1, 1, 1 }, { 1, 0, 0, 0 });
+
 			// 描画前処理
 			dxCommon->PreDraw(); // RTV/DSVの設定のみ
 			// srvManager->PreDraw(); // 1回目のSrvManagerヒープ設定は削除 (ImGuiの描画前にはdxCommonヒープが必要なため)

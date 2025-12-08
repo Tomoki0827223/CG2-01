@@ -226,5 +226,7 @@
     <FxCompile Include="resources\shaders\Object3d.VS.hlsl">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
+    <FxCompile Include="Particle.VS.hlsl" />
+    <FxCompile Include="Particle.PS.hlsl" />
   </ItemGroup>
 </Project>

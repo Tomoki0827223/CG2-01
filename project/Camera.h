@@ -58,4 +58,6 @@ public:
     Transform& GetTransform() { return transform; }
     const Transform& GetTransform() const { return transform; } // const版も追加
     // -----------------------------------------------------------------------------------
+
+    Matrix4x4 GetInverseViewMatrix() const;
 };
